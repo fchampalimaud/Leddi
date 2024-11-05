@@ -100,11 +100,21 @@ try:
         # Inverted behaviour: The LED will only turn off when the user LED pin on the XIAO ESP32S3 is set to a high level
         # and it will only turn on when the pin is set to a low level.
 
-        control_led("OFF")
+        # Turn ON the LED
+        if light_cycle['fade_in_duration'] > 0:
+            control_led("OFF_FADE")
+            # for i in range(0, 100, 10):
+            #     control_led(f"FADE_IN_{i}")
+            #     time.sleep(light_cycle['fade_in_duration'] / 10)
+        else:
+            control_led("OFF")
         time.sleep(light_cycle['on_duration'])
 
         # Turn OFF the LED
-        control_led("ON")
+        if light_cycle['fade_out_duration'] > 0:
+            control_led("ON_FADE")
+        else:
+            control_led("ON")
         time.sleep(light_cycle['off_duration'])
 
 

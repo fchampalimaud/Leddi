@@ -1,7 +1,9 @@
 // Define LED pin
 #include <time.h>
-const int LED_PIN = LED_BUILTIN; // On some boards, this is already defined as 13 or 2
+const int LED_PIN = LED_BUILTIN; 
 bool isSynced = false; // Flag to track if sync has already occurred
+const int PWM_FREQUENCY = 5000; // Frequency in Hz
+const int PWM_RESOLUTION = 8;   // 8-bit resolution: duty cycle range from 0 to 255
 
 void setTimeFromTimestamp(time_t timestamp) {
   struct timeval tv;
@@ -13,13 +15,14 @@ void setTimeFromTimestamp(time_t timestamp) {
 
 void setup() {
   // Initialize serial communication at 115200 baud rate
+  ledcAttach(LED_PIN, PWM_FREQUENCY, PWM_RESOLUTION);
   Serial.begin(115200);
 
   // Initialize LED_BUILTIN pin as an output
-  pinMode(LED_PIN, OUTPUT);
+  // pinMode(LED_PIN, OUTPUT);
 
   // Turn off the LED initially
-  digitalWrite(LED_PIN, LOW);
+  // digitalWrite(LED_PIN, LOW);
 
   // Wait for serial connection to be established (optional)
   while (!Serial) {
@@ -52,17 +55,38 @@ void loop() {
         Serial.println("Invalid timestamp received.");
       }
     }
-
     else {
 
-      // Process commands
+  
       if (command == "ON") {
-        digitalWrite(LED_PIN, HIGH);  // Turn on the LED
+        // digitalWrite(LED_PIN, HIGH);  // Turn on the LED
+        ledcWrite(LED_PIN, 255);  // Note: `channel` parameter is now `pin`
         Serial.println("LED OFF");
       }
+      else if (command == "ON_FADE")
+      {
+        // Fade in: increase brightness from min to max
+        Serial.println("FADING IN");
+        // for (int dutyCycle = 255; dutyCycle >= 0; dutyCycle--) {
+        for (int dutyCycle = 0; dutyCycle <= 255; dutyCycle++) {
+          ledcWrite(LED_PIN, dutyCycle);  // Note: `channel` parameter is now `pin`
+          delay(10);
+        }
+      }
       else if (command == "OFF") {
-        digitalWrite(LED_PIN, LOW);   // Turn off the LED
+        // digitalWrite(LED_PIN, LOW);   // Turn on the LED
+        ledcWrite(LED_PIN, 0);  // Note: `channel` parameter is now `pin`
         Serial.println("LED ON");
+      }
+      else if (command == "OFF_FADE")
+      {
+        // Fade out: decrease brightness from max to min
+        Serial.println("FADING OUT");
+        // for (int dutyCycle = 0; dutyCycle <= 255; dutyCycle++) {
+        for (int dutyCycle = 255; dutyCycle >= 0; dutyCycle--) {
+          ledcWrite(LED_PIN, dutyCycle);  // Note: `channel` parameter is now `pin`
+          delay(10);
+        }
       }
       else {
         Serial.println("Unknown command");

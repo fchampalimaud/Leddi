@@ -1,4 +1,3 @@
-// Define LED pin (you can use any GPIO that supports PWM, e.g., GPIO2)
 const int LED_PIN = LED_BUILTIN;
 
 // Define PWM settings
