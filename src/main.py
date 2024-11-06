@@ -49,7 +49,6 @@ def sync_time_with_esp32():
             print("No response from ESP32")
     else:
         print("Serial port is not open")
-        # Continuously try to sync time with ESP32 until successful
         
 
 
@@ -70,7 +69,6 @@ def control_led(command):
         print("Serial port is not open")
 
 try:
-
 
     sync_time_with_esp32()
     response = ser.readline().decode().strip()
@@ -103,9 +101,6 @@ try:
         # Turn ON the LED
         if light_cycle['fade_in_duration'] > 0:
             control_led(f"OFF_FADE_{light_cycle['fade_in_duration']}")
-            # for i in range(0, 100, 10):
-            #     control_led(f"FADE_IN_{i}")
-            #     time.sleep(light_cycle['fade_in_duration'] / 10)
         else:
             control_led("OFF")
         time.sleep(light_cycle['on_duration'])
@@ -122,6 +117,5 @@ except KeyboardInterrupt:
     print("Interrupted by user")
 
 finally:
-    # Close the serial connection
     ser.close()
     print("Serial connection closed")

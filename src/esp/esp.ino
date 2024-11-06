@@ -18,20 +18,12 @@ void setup() {
   ledcAttach(LED_PIN, PWM_FREQUENCY, PWM_RESOLUTION);
   Serial.begin(115200);
 
-  // Initialize LED_BUILTIN pin as an output
-  // pinMode(LED_PIN, OUTPUT);
-
-  // Turn off the LED initially
-  // digitalWrite(LED_PIN, LOW);
-
-  // Wait for serial connection to be established (optional)
+  // Wait for serial connection to be established 
   while (!Serial) {
     ; // Wait for Serial to connect
   }
 
   Serial.println("ESP32 ready for initial clock sync...");
-  // Sync the clock with the PC time
-
 
   Serial.println("ESP32 ready for commands...");
 }
@@ -59,8 +51,8 @@ void loop() {
 
   
       if (command == "ON") {
-        // digitalWrite(LED_PIN, HIGH);  // Turn on the LED
-        ledcWrite(LED_PIN, 255);  // Note: `channel` parameter is now `pin`
+
+        ledcWrite(LED_PIN, 255);
         Serial.println("LED OFF");
       }
       else if (command.startsWith("ON_FADE_")) {
@@ -77,8 +69,8 @@ void loop() {
         }
       }
       else if (command == "OFF") {
-        // digitalWrite(LED_PIN, LOW);   // Turn on the LED
-        ledcWrite(LED_PIN, 0);  // Note: `channel` parameter is now `pin`
+
+        ledcWrite(LED_PIN, 0);  
         Serial.println("LED ON");
       }
       else if (command.startsWith("OFF_FADE_")) {
@@ -94,15 +86,7 @@ void loop() {
           Serial.println("Invalid duration received.");
         }
       }
-      // {
-      //   // Fade out: decrease brightness from max to min
-      //   Serial.println("FADING OUT");
-      //   // for (int dutyCycle = 0; dutyCycle <= 255; dutyCycle++) {
-      //   for (int dutyCycle = 255; dutyCycle >= 0; dutyCycle--) {
-      //     ledcWrite(LED_PIN, dutyCycle);  // Note: `channel` parameter is now `pin`
-      //     delay(10);
-      //   }
-      // }
+
       else {
         Serial.println("Unknown command");
       }
