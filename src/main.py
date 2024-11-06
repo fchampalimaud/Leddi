@@ -102,7 +102,7 @@ try:
 
         # Turn ON the LED
         if light_cycle['fade_in_duration'] > 0:
-            control_led("OFF_FADE")
+            control_led(f"OFF_FADE_{light_cycle['fade_in_duration']}")
             # for i in range(0, 100, 10):
             #     control_led(f"FADE_IN_{i}")
             #     time.sleep(light_cycle['fade_in_duration'] / 10)
@@ -112,7 +112,7 @@ try:
 
         # Turn OFF the LED
         if light_cycle['fade_out_duration'] > 0:
-            control_led("ON_FADE")
+            control_led(f"ON_FADE_{light_cycle['fade_out_duration']}")
         else:
             control_led("ON")
         time.sleep(light_cycle['off_duration'])

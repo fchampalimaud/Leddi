@@ -54,7 +54,7 @@ void loop() {
       } else {
         Serial.println("Invalid timestamp received.");
       }
-    }
+    } 
     else {
 
   
@@ -63,14 +63,17 @@ void loop() {
         ledcWrite(LED_PIN, 255);  // Note: `channel` parameter is now `pin`
         Serial.println("LED OFF");
       }
-      else if (command == "ON_FADE")
-      {
-        // Fade in: increase brightness from min to max
-        Serial.println("FADING IN");
-        // for (int dutyCycle = 255; dutyCycle >= 0; dutyCycle--) {
-        for (int dutyCycle = 0; dutyCycle <= 255; dutyCycle++) {
-          ledcWrite(LED_PIN, dutyCycle);  // Note: `channel` parameter is now `pin`
-          delay(10);
+      else if (command.startsWith("ON_FADE_")) {
+        int duration = command.substring(8).toInt();
+        if (duration > 0) {
+          Serial.println("FADING IN with duration: " + String(duration));
+          int stepDelay = duration*1000 / 255;
+          for (int dutyCycle = 0; dutyCycle <= 255; dutyCycle++) {
+            ledcWrite(LED_PIN, dutyCycle);
+            delay(stepDelay);
+          }
+        } else {
+          Serial.println("Invalid duration received.");
         }
       }
       else if (command == "OFF") {
@@ -78,16 +81,28 @@ void loop() {
         ledcWrite(LED_PIN, 0);  // Note: `channel` parameter is now `pin`
         Serial.println("LED ON");
       }
-      else if (command == "OFF_FADE")
-      {
-        // Fade out: decrease brightness from max to min
-        Serial.println("FADING OUT");
-        // for (int dutyCycle = 0; dutyCycle <= 255; dutyCycle++) {
-        for (int dutyCycle = 255; dutyCycle >= 0; dutyCycle--) {
-          ledcWrite(LED_PIN, dutyCycle);  // Note: `channel` parameter is now `pin`
-          delay(10);
+      else if (command.startsWith("OFF_FADE_")) {
+        int duration = command.substring(9).toInt();
+        if (duration > 0) {
+          Serial.println("FADING OUT with duration: " + String(duration));
+          int stepDelay = duration * 1000 / 255;
+          for (int dutyCycle = 255; dutyCycle >= 0; dutyCycle--) {
+            ledcWrite(LED_PIN, dutyCycle);
+            delay(stepDelay);
+          }
+        } else {
+          Serial.println("Invalid duration received.");
         }
       }
+      // {
+      //   // Fade out: decrease brightness from max to min
+      //   Serial.println("FADING OUT");
+      //   // for (int dutyCycle = 0; dutyCycle <= 255; dutyCycle++) {
+      //   for (int dutyCycle = 255; dutyCycle >= 0; dutyCycle--) {
+      //     ledcWrite(LED_PIN, dutyCycle);  // Note: `channel` parameter is now `pin`
+      //     delay(10);
+      //   }
+      // }
       else {
         Serial.println("Unknown command");
       }

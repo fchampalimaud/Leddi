@@ -1,9 +1,9 @@
 # light_cycle_config.yaml
 light_cycle:
-  start_time: "11:41:00"    # Time to start the light cycle
+  start_time: "09:04:00"    # Time to start the light cycle
   cycles: 5                 # Number of cycles to repeat
-  on_duration: 3            # Duration in seconds for the light to stay on
-  off_duration: 1           # Duration in seconds for the light to stay off
+  on_duration: 5            # Duration in seconds for the light to stay on
+  off_duration: 10           # Duration in seconds for the light to stay off
   delay_before_start: 0     # Delay in seconds before starting the light cycle
-  fade_in_duration: 1       # Duration in seconds for the light to fade in
-  fade_out_duration: 1      # Duration in seconds for the light to fade out
+  fade_in_duration: 2       # Duration in seconds for the light to fade in
+  fade_out_duration: 2      # Duration in seconds for the light to fade out
