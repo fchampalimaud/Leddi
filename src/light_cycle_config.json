@@ -2,8 +2,8 @@
     "light_cycle": {
         "cycles": 5,
         "delay_before_start": 1,
-        "fade_in_duration": 1,
-        "fade_out_duration": 1,
+        "fade_in_duration": 2,
+        "fade_out_duration": 2,
         "off_duration": 5,
         "on_duration": 5,
         "start_time": "09:04:01"

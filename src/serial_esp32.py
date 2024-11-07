@@ -34,4 +34,8 @@ class SerialESP32:
         except serial.SerialException as e:
                 print(f"Serial error: {e}")
 
+    def close(self):
+        self.ser.close()
+        print("Serial connection closed.")
+
 
