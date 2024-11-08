@@ -3,7 +3,16 @@
 #include <Arduino.h>
 #include <esp_psram.h>
 
+bool isSynced = false; 
 Preferences preferences;
+
+void setTimeFromTimestamp(time_t timestamp) {
+  struct timeval tv;
+  tv.tv_sec = timestamp;  // Seconds since epoch
+  tv.tv_usec = 0;         // Microseconds (not used)
+  settimeofday(&tv, NULL);
+  Serial.println("Clock synchronized with PC time.");
+}
 
 void setup() {
   Serial.begin(115200);
@@ -16,6 +25,22 @@ void setup() {
 
 void loop() {
   if (Serial.available()) {
+    
+
+    while (!isSynced) {
+
+      time_t timestamp = command.toInt();
+
+      // If the timestamp is valid, set the ESP32's time and mark as synced
+      if (timestamp > 0) {
+        setTimeFromTimestamp(timestamp);
+        Serial.println("Time set to: " + String(ctime(&timestamp)));
+        isSynced = true; // Mark sync as complete
+      } else {
+        Serial.println("Invalid timestamp received.");
+      }
+    }
+
     // Read the JSON string from serial
     String jsonString = Serial.readStringUntil('\n');
 

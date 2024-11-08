@@ -67,10 +67,21 @@ void setup() {
 void loop() {
   // Use loaded configuration in your application
 
-    Serial.println("COUCOU #2");
+    // Get the current time
+    struct tm timeinfo;
+    if (!getLocalTime(&timeinfo)) {
+        Serial.println("Failed to obtain time");
+        return;
+    }
 
-    Serial.printf("Cycles: %d\n", cycles);
+    // Parse the start time
+    int startHour, startMinute, startSecond;
+    sscanf(startTime.c_str(), "%d:%d:%d", &startHour, &startMinute, &startSecond);
 
+    // Check if the current time matches the start time
+    if (timeinfo.tm_hour != startHour || timeinfo.tm_min >= startMinute || timeinfo.tm_sec >= startSecond) {
+        return;  // Exit the loop if the current time does not match the start time
+    }
 
     delay(delayBeforeStart * 1000);
 
