@@ -1,26 +1,28 @@
 
 
-# Lighting Control System
+# Leddi - Lighting Control System
 
-a Programmable LED Light 
-
-Syncronizathion of clock via serial communication.
-Sync RTC time with serial communication.
-
-has an internal RTC
-
-in 'light_cycle_config.yaml'
+### Overview
+Leedi is a programmable LED light control system designed to manage lighting schedules using an internal Real-Time Clock (RTC). This system synchronizes the clock via serial communication, enabling automatic time updates to maintain consistent schedules. The schedules are stored in the microcontroller's flash memory, allowing the system to operate autonomously. This makes Leedi particularly useful for applications such as circadian rhythm studies.
 
 
-With 8MB of PSRAM and 8MB of FLASH
+## Features
+
+
+## Requirements
+- **Hardware**: Seeed Studio XIAO ESP32S3 microcontroller.
+- **Software**: Arduino CLI installed on your computer. [Installation guide for Arduino CLI](https://arduino.github.io/arduino-cli/0.24/installation/)
+
+### Getting Started
+To compile and upload the code for the Lighting Control System to the Seeed Studio XIAO ESP32S3 microcontroller on COM5, you’ll need to use the Arduino CLI.
 
 
 
-Next, create a Python script that uses the Arduino CLI to compile and upload this .cpp file to the Seeed Studio XIAO ESP32S3 on COM5. If you haven’t already installed Arduino CLI, download and install it.
-https://arduino.github.io/arduino-cli/0.24/installation/
+#### 1. Set up the Seeed Studio XIAO ESP32S3 Board Definition
+To ensure that Arduino CLI recognizes the Seeed Studio XIAO ESP32S3, add the ESP32 core to Arduino CLI with these commands:
 
-
-Make sure the Seeed Studio XIAO ESP32S3 board definition is set up in Arduino CLI. You can install it with:
-
+```bash
 arduino-cli core update-index
 arduino-cli core install esp32:esp32
+```
+
