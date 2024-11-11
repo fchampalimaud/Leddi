@@ -1,8 +1,0 @@
-light_cycle:
-  cycles: 4
-  delay_before_start: 0
-  fade_in_duration: 0
-  fade_out_duration: 0
-  off_duration: 6
-  on_duration: 5
-  start_time: 09:04:01

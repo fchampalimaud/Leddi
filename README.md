@@ -26,3 +26,17 @@ arduino-cli core update-index
 arduino-cli core install esp32:esp32
 ```
 
+
+#
+
+Configure cycles and patterns respectivly. A cycle in one complete repetition of a pattern.
+
+
+for in vitro light stimulation, cells were
+stimulated at 24 h after transfection with a 30 s ON and 30 s OFF blue
+light pulse (470 nm, 0.1–4 mW/cm2
+; ThorLabs, Newton, NJ, USA) unless
+otherwise noted. Light cycles were programmed by connecting to a
+DC2100 LED driver with pulse modulation (ThorLabs, Newton, NJ,
+USA). The light intensity was measured by using an optical power
+meter from ThorLabs (Newton, NJ, USA)
