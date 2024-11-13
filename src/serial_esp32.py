@@ -27,6 +27,8 @@ class SerialESP32:
             print(json_data)
             
             # Send JSON data over serial
+            # TODO:
+            # self.ser.write(json_data.encode('utf-8'))
             self.ser.write(json_data.encode('utf-8'))
             self.ser.write(b'\n')
             print("Data sent successfully.")

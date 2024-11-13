@@ -40,7 +40,7 @@ void loop() {
         Serial.println("Time set to: " + String(ctime(&timestamp)));
         isSynced = true; // Mark sync as complete
       } else {
-        Serial.println("Invalid timestamp received.");
+        Serial.println(timestamp + "Invalid timestamp received.");
       }
     }
 
@@ -64,10 +64,22 @@ void loop() {
         // Store parameters from "light_cycle" in flash memory
         preferences.putInt("cycles", lightCycle["cycles"] | 0);
         preferences.putInt("delay_b_start", lightCycle["delay_before_start"] | 0);
-        preferences.putInt("fade_in_dur", lightCycle["fade_in_duration"] | 0);
-        preferences.putInt("fade_out_dur", lightCycle["fade_out_duration"] | 0);
-        preferences.putInt("off_duration", lightCycle["off_duration"] | 0);
-        preferences.putInt("on_duration", lightCycle["on_duration"] | 0);
+        // Store number of patterns
+        int nPatterns = lightCycle["n_patterns"] | 0;
+        preferences.putInt("n_patterns", nPatterns);
+
+        // Loop through each pattern and store its parameters
+        for (int i = 0; i < nPatterns; i++) {
+            // Access each pattern in the array
+            JsonObject pattern = lightCycle["patterns"][i];
+            
+            // Create unique keys for each pattern's parameter based on the index
+            preferences.putInt(("pattern_" + String(i) + "_duration").c_str(), pattern["pattern_duration"] | 0);
+            preferences.putInt(("pattern_" + String(i) + "_on_duration").c_str(), pattern["on_duration"] | 0);
+            preferences.putInt(("pattern_" + String(i) + "_off_duration").c_str(), pattern["off_duration"] | 0);
+            preferences.putInt(("pattern_" + String(i) + "_fade_in_dur").c_str(), pattern["fade_in_duration"] | 0);
+            preferences.putInt(("pattern_" + String(i) + "_fade_out_dur").c_str(), pattern["fade_out_duration"] | 0);
+        }
 
         // Parse start_time as a string (e.g., "09:04:01")
         const char* startTime = lightCycle["start_time"];
