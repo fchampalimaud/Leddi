@@ -1,14 +1,21 @@
 {
     "light_cycle": {
-        "n_cycles": 5,
-        "delay_before_start": 0,
-        "start_time": "03:00:00",
-        "n_patterns": 1,
+        "n_cycles": 4,
+        "delay_before_start": 1,
+        "start_time": "17:41:00",
+        "n_patterns": 2,
         "patterns": [
             {
-                "pattern_duration": 10,
-                "on_duration": 5,
-                "off_duration": 5,
+                "pattern_duration": 4,
+                "on_duration": 1,
+                "off_duration": 1,
+                "fade_in_duration": 0,
+                "fade_out_duration": 0
+            },
+            {
+                "pattern_duration": 4,
+                "on_duration": 0,
+                "off_duration": 4,
                 "fade_in_duration": 0,
                 "fade_out_duration": 0
             }

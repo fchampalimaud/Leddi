@@ -221,6 +221,7 @@ class LightCycleConfigurator(QMainWindow):
         with open('./config.json', 'w') as json_file:
             json.dump(config, json_file, indent=4)
         data = json.dumps(config)
+        print('Here data:' + data)
         self.esp32.upload_config(data)
 
     def get_seconds(self, value, unit):
