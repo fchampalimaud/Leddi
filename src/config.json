@@ -2,20 +2,20 @@
     "light_cycle": {
         "n_cycles": 4,
         "delay_before_start": 1,
-        "start_time": "17:41:00",
+        "start_time": "17:07:00",
         "n_patterns": 2,
         "patterns": [
             {
-                "pattern_duration": 4,
+                "pattern_duration": 300,
                 "on_duration": 1,
                 "off_duration": 1,
                 "fade_in_duration": 0,
-                "fade_out_duration": 0
+                "fade_out_duration": 3
             },
             {
                 "pattern_duration": 4,
                 "on_duration": 0,
-                "off_duration": 4,
+                "off_duration": 5,
                 "fade_in_duration": 0,
                 "fade_out_duration": 0
             }

@@ -2,9 +2,11 @@ import sys
 import json
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QLineEdit, QComboBox, QPushButton, QSpinBox, QTimeEdit, QGroupBox, QFormLayout, QScrollArea
+    QLabel, QLineEdit, QComboBox, QPushButton, QSpinBox, QTimeEdit, QGroupBox, QFormLayout, QScrollArea, QSizePolicy,  QSpacerItem
 )
 from PyQt5.QtCore import Qt, QTime
+from PyQt5 import QtSvg
+from PyQt5.QtSvg import QSvgWidget
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import numpy as np
@@ -28,19 +30,30 @@ class LightCycleConfigurator(QMainWindow):
         self.setCentralWidget(scroll_area)
         self.main_layout = QVBoxLayout(scroll_content)
 
+      # Create the logo widget
+        logo = QSvgWidget('Assets/cf_hardware_software_logo.svg')
+        logo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        logo.setFixedSize(100, 35)  # Ensures the widget has a specific size
+
+        # Create a spacer and a layout to position the logo
+        spacer = QSpacerItem(0, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)  # Pushes the logo to the top
+        self.main_layout.addItem(spacer)
+        self.main_layout.addWidget(logo, alignment=Qt.AlignRight | Qt.AlignTop)  # Align logo to top-right corner
+
         title_label = QLabel("Light Cycle Configurator")
         font = title_label.font()
         title_label.setFixedHeight(25)
         font.setPointSize(12) 
         font.setBold(True)
         title_label.setFont(font)
-        title_label.setAlignment(Qt.AlignCenter)
+        title_label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         self.main_layout.addWidget(title_label)
 
         # Config form elements
         self.config_form()
         
         # Patterns container
+        self.patterns = []
         self.pattern_container = QVBoxLayout()
         self.main_layout.addLayout(self.pattern_container)
 
@@ -69,6 +82,8 @@ class LightCycleConfigurator(QMainWindow):
                 delay_before_start = config.get("light_cycle", {}).get("delay_before_start", 0)
                 start_time_str = config.get("light_cycle", {}).get("start_time", "00:00:00")
                 n_patterns = config.get("light_cycle", {}).get("n_patterns", 1)
+                for pattern in config.get("light_cycle", {}).get("patterns", []):
+                    pass    
         except FileNotFoundError:
             n_cycles = 1
             delay_before_start = 0
@@ -114,17 +129,46 @@ class LightCycleConfigurator(QMainWindow):
         for i in reversed(range(self.pattern_container.count())):
             widget = self.pattern_container.itemAt(i).widget()
             if widget:
+                # update the 
+                while len(self.patterns) > self.n_patterns.value():
+                    self.patterns.pop()
+                # self.n_patterns.value()
                 widget.deleteLater()
 
         # Add pattern forms based on number of patterns
         n_patterns = self.n_patterns.value()
-        self.patterns = []
+        # self.patterns = []
         for i in range(n_patterns):
             group = QGroupBox(f"Pattern {i + 1}")
             layout = QFormLayout()
 
+            # if pattern exists, load the values
+            try:
+                with open('./config.json', 'r') as json_file:
+                    config = json.load(json_file)
+                    if i < len(config.get("light_cycle", {}).get("patterns", [])):
+                        pattern = config.get("light_cycle", {}).get("patterns", [])[i]
+                        pattern_duration_value = pattern.get("pattern_duration", 60)
+                        on_duration_value = pattern.get("on_duration", 30)
+                        off_duration_value = pattern.get("off_duration", 30)
+                        fade_in_duration_value = pattern.get("fade_in_duration", 0)
+                        fade_out_duration_value = pattern.get("fade_out_duration", 0)
+                    else:
+                        pattern_duration_value = 0
+                        on_duration_value = 0
+                        off_duration_value = 0
+                        fade_in_duration_value = 0
+                        fade_out_duration_value = 0
+            except FileNotFoundError:
+                pattern_duration_value = 0
+                on_duration_value = 0
+                off_duration_value = 0
+                fade_in_duration_value = 0
+                fade_out_duration_value = 0
+
             # Pattern duration
             pattern_duration = QSpinBox()
+            pattern_duration.setValue(pattern_duration_value)
             pattern_duration_unit = QComboBox()
             pattern_duration_unit.addItems(["seconds", "minutes", "hours"])
             pattern_duration_layout = QHBoxLayout()
@@ -134,6 +178,7 @@ class LightCycleConfigurator(QMainWindow):
 
             # On duration
             on_duration = QSpinBox()
+            on_duration.setValue(on_duration_value)
             on_duration_unit = QComboBox()
             on_duration_unit.addItems(["seconds", "minutes", "hours"])
             on_duration_layout = QHBoxLayout()
@@ -143,6 +188,7 @@ class LightCycleConfigurator(QMainWindow):
 
             # Off duration
             off_duration = QSpinBox()
+            off_duration.setValue(off_duration_value)
             off_duration_unit = QComboBox()
             off_duration_unit.addItems(["seconds", "minutes", "hours"])
             off_duration_layout = QHBoxLayout()
@@ -152,6 +198,7 @@ class LightCycleConfigurator(QMainWindow):
 
             # Fade in duration
             fade_in_duration = QSpinBox()
+            fade_in_duration.setValue(fade_in_duration_value)
             fade_in_duration_unit = QComboBox()
             fade_in_duration_unit.addItems(["seconds", "minutes", "hours"])
             fade_in_layout = QHBoxLayout()
@@ -161,6 +208,7 @@ class LightCycleConfigurator(QMainWindow):
 
             # Fade out duration
             fade_out_duration = QSpinBox()
+            fade_out_duration.setValue(fade_out_duration_value)
             fade_out_duration_unit = QComboBox()
             fade_out_duration_unit.addItems(["seconds", "minutes", "hours"])
             fade_out_layout = QHBoxLayout()
@@ -252,18 +300,22 @@ class LightCycleConfigurator(QMainWindow):
                 # time += on_duration + off_duration
                 while pattern_duration > 0:
                     if pattern_duration >= on_duration:
-                        timeline.append((time, 1))
-                        time += on_duration
-                        pattern_duration -= on_duration
+                        if on_duration > 0:
+                            timeline.append((time, 1))
+                            print("on  " + str(on_duration))
+                            time += on_duration
+                            pattern_duration -= on_duration
                     else:
                         timeline.append((time, 1))
                         time += pattern_duration
                         pattern_duration = 0
 
                     if pattern_duration >= off_duration:
-                        timeline.append((time, 0))
-                        time += off_duration
-                        pattern_duration -= off_duration
+                        if off_duration > 0:
+                            timeline.append((time, 0))
+                            print("off " + str(off_duration))
+                            time += off_duration
+                            pattern_duration -= off_duration
                     else:
                         timeline.append((time, 0))
                         time += pattern_duration
@@ -285,7 +337,7 @@ if __name__ == "__main__":
     baud_rate = 115200
     source_file = "configuration/configuration.ino"
 
-    compile_and_upload(board_fqbn, serial_port, source_file)
+    # compile_and_upload(board_fqbn, serial_port, source_file)
 
     esp32 = SerialESP32(serial_port, baud_rate)
 
@@ -301,4 +353,4 @@ if __name__ == "__main__":
     
     print("Uploading cycle configuration...")
     source_file = "cycle/cycle.ino"
-    compile_and_upload(board_fqbn, serial_port, source_file)
+    # compile_and_upload(board_fqbn, serial_port, source_file)

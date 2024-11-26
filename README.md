@@ -29,7 +29,7 @@ arduino-cli core install esp32:esp32
 
 #
 
-Configure cycles and patterns respectivly. A cycle in one complete repetition of a pattern.
+Configure cycles and patterns respectivly. A cycle in one complete repetition of a pattern. 
 
 
 for in vitro light stimulation, cells were
