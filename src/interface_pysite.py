@@ -14,8 +14,18 @@ import numpy as np
 from json_utils import *
 import time
 
+from serial_esp32 import SerialESP32
+from ino_utils import compile_and_upload
+import threading
+from PySide6.QtWidgets import QFileDialog
+
 class LightCycleConfigurator(QMainWindow):
     def __init__(self, esp32):
+        # Specify board details
+        self.board_fqbn = "esp32:esp32:XIAO_ESP32S3"
+        self.baud_rate = 115200
+        self.source_file = "src/configuration/configuration.ino"
+
         super().__init__()
         self.setWindowTitle("Light Cycle Configurator")
         
@@ -35,14 +45,18 @@ class LightCycleConfigurator(QMainWindow):
 
         # Create the logo widget
         logo = QSvgWidget('./src/Assets/cf_hardware_software_logo.svg')
-        print(logo.size())
-        logo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        # print(logo.size())
+        # logo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         # logo.setFixedSize(64, 64)  # Ensures the widget has a specific size (640, 480)
 
         # Create a layout to position the logo
         logo_layout = QHBoxLayout()
         # logo.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
-        logo_layout.addWidget(logo) #, alignment=Qt.AlignRight | Qt.AlignTop)
+        logo.setFixedSize(100, 40)
+        logo.renderer().setAspectRatioMode(Qt.KeepAspectRatio)
+        # logo.setFixedSize(100, 35)
+        # logo_layout.addWidget(logo, alignment=Qt.AlignRight | Qt.AlignTop)
+        self.main_layout.addWidget(logo, alignment=Qt.AlignRight | Qt.AlignTop)
         # Ensure no unwanted margins or spacing
         # logo_layout.setContentsMargins(1, 1, 1, 1)
         # logo_layout.setSpacing(0)
@@ -62,33 +76,92 @@ class LightCycleConfigurator(QMainWindow):
         title_label = QLabel("Light Cycle Configurator")
         font = title_label.font()
         title_label.setFixedHeight(25)
-        font.setPointSize(12) 
+        font.setPointSize(12)
         font.setBold(True)
         title_label.setFont(font)
         title_label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         self.main_layout.addWidget(title_label)
 
+        # Create a help button
+        help_button = QPushButton("Help")
+        help_button.clicked.connect(self.show_help)
 
-        # WHile Esp32 is not connected show the message
+        # Create a layout to position the title and help button
+        title_layout = QHBoxLayout()
+        title_layout.addWidget(title_label)
+        title_layout.addWidget(help_button, alignment=Qt.AlignRight)
+        self.main_layout.addLayout(title_layout)
+        
+
+        # Create a load preexisting configuration button
+        load_config_button = QPushButton("  Load Pre-set Configuration  ")
+        button_layout = QHBoxLayout()
+        button_layout.addWidget(load_config_button, alignment=Qt.AlignRight)
+        self.main_layout.addLayout(button_layout)
+        load_config_button.clicked.connect(self.load_config)
+
+
 
         self.window_loading()
 
-        # # Config form elements
-        # self.config_form()
+        # Config form elements
+        self.config_form()
         
-        # # Patterns container
-        # self.patterns = []
-        # self.pattern_container = QVBoxLayout()
-        # self.main_layout.addLayout(self.pattern_container)
+        # Patterns container
+        self.patterns = []
+        self.pattern_container = QVBoxLayout()
+        self.main_layout.addLayout(self.pattern_container)
 
-        # self.update_patterns() # Add initial pattern form
+        self.update_patterns() # Add initial pattern form
 
-        # # Buttons for JSON generation and Plotting
-        # self.buttons()
+        # Buttons for JSON generation and Plotting
+        self.buttons()
 
-        # # Output JSON and Plot section
-        # self.setup_plot()
+        # Output JSON and Plot section
+        self.setup_plot()
     
+    def show_help(self):
+        self.help_window = QWidget()
+        self.help_window.setWindowTitle("Help")
+        self.help_window.setGeometry(200, 200, 400, 300)
+
+        help_layout = QVBoxLayout(self.help_window)
+        help_text = QLabel(" <b> Instructions on how to use the application:</b><br><br>"
+                "<b>1.</b> Select the COM port and click 'Connect'.<br>"
+                "<b>2.</b> Configure the main settings and patterns.<br>"
+                "<b>3.</b> Click 'Configure' to generate the JSON configuration.<br>"
+                "<b>4.</b> Click 'Generate Plot' to visualize the light cycle.<br>"
+                "<b>5.</b> Upload the configuration to the ESP32 device.")
+        help_text.setWordWrap(True)
+        help_layout.addWidget(help_text)
+
+        self.help_window.setLayout(help_layout)
+        self.help_window.show()
+    def load_config(self):
+
+        options = QFileDialog.Options()
+        options |= QFileDialog.ReadOnly
+        file_name, _ = QFileDialog.getOpenFileName(self, "Open Configuration File", "", "JSON Files (*.json);;All Files (*)", options=options)
+        if file_name:
+            try:
+                with open(file_name, 'r') as json_file:
+                    config = json.load(json_file)
+                    self.n_cycles.setValue(config.get("light_cycle", {}).get("n_cycles", 1))
+                    self.delay_before_start.setValue(config.get("light_cycle", {}).get("delay_before_start", 0))
+                    start_time_str = config.get("light_cycle", {}).get("start_time", "00:00:00")
+                    self.start_time.setTime(QTime.fromString(start_time_str, "HH:mm:ss"))
+                    self.n_patterns.setValue(config.get("light_cycle", {}).get("n_patterns", 1))
+                    self.update_patterns()
+                    for i, pattern in enumerate(config.get("light_cycle", {}).get("patterns", [])):
+                        pattern_dur, pattern_unit, on_dur, on_unit, off_dur, off_unit = self.patterns[i]
+                        pattern_dur.setValue(pattern.get("pattern_duration", 60))
+                        on_dur.setValue(pattern.get("on_duration", 30))
+                        off_dur.setValue(pattern.get("off_duration", 30))
+            except Exception as e:
+                print(f"Failed to load configuration: {e}")
+
+
+
     def window_loading(self):
         
         # Create a dropdown menu for COM port selection
@@ -108,9 +181,10 @@ class LightCycleConfigurator(QMainWindow):
 
         com_port_layout.addWidget(port_label)
         com_port_layout.addWidget(self.com_port_dropdown)
+        port_label.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
         # add the connect button
         self.connect_button = QPushButton("Connect")
-        # self.connect_button.clicked.connect()
+        self.connect_button.clicked.connect(self.upload_sketch)
         com_port_layout.addWidget(self.connect_button)
 
 
@@ -118,32 +192,61 @@ class LightCycleConfigurator(QMainWindow):
       
         self.main_layout.addLayout(com_port_layout)
 
+        # Create a label to show loading status
+        self.loading_label = QLabel("Not connected")
+        self.loading_label.setStyleSheet("color: red;")
+        self.loading_label.setAlignment(Qt.AlignRight)
+        self.main_layout.addWidget(self.loading_label)
+        
+
+        # Start a timer to update the loading label
+        # self.loading_timer = self.startTimer(500)  # Update every 500 ms
+
         # Create a button to connect to the ESP32
 
         # self.connect_button.clicked.connect(self.esp32.connect)
         # self.main_layout.addWidget(self.connect_button)
 
-        # Create a label to show loading status
-        self.loading_label = QLabel("Loading...")
-        self.loading_label.setAlignment(Qt.AlignLeft)
-        self.main_layout.addWidget(self.loading_label)
+        # # Create a label to show loading status
+        # self.loading_label = QLabel("Loading...")
+        # self.loading_label.setAlignment(Qt.AlignLeft)
+        # self.main_layout.addWidget(self.loading_label)
 
-        # Start a timer to update the loading label
-        self.loading_timer = self.startTimer(500)  # Update every 500 ms
+        # # Start a timer to update the loading label
+        # self.loading_timer = self.startTimer(500)  # Update every 500 ms
+    
+    def upload_sketch(self):
+        # Upload the sketch to the ESP32
+        try:
+            # self.loading_timer = self.startTimer(500)
+            if compile_and_upload(self.board_fqbn, self.serial_port, self.source_file):
+                # self.killTimer(self.loading_timer)
+                self.esp32.set_port(self.serial_port)
+                self.esp32.sync_time_with_esp32()
+                self.loading_label.setStyleSheet("color: green;")
+                self.loading_label.setText("Connected")
+            else:
+                self.loading_label.setStyleSheet("color: red;")
+                self.loading_label.setText("Connection failed")
+        except Exception as e:
+            print(f"An error occurred during compilation or upload: {e}")
+            self.loading_label.setStyleSheet("color: red;")
+            self.loading_label.setText("Connection failed")
 
     def timerEvent(self, event):
         # Update the loading label with iterative dots
         current_text = self.loading_label.text()
         if current_text.endswith("..."):
-            self.loading_label.setText("Loading")
+            self.loading_label.setText("Connecting")
         else:
             self.loading_label.setText(current_text + ".")
 
     def update_com_port(self):
         # Update the COM port based on dropdown selection
         selected_port = self.com_port_dropdown.currentText()
-        print(f"Selected COM port: {selected_port}")
-        self.esp32.set_port(selected_port)
+        self.serial_port = selected_port
+        # print(f"Selected COM port: {selected_port}")
+        # self.esp32.set_port(selected_port)
 
     def config_form(self):
         # Main configuration form
@@ -201,19 +304,22 @@ class LightCycleConfigurator(QMainWindow):
         self.main_layout.addWidget(self.main_settings_group)
 
     def update_patterns(self):
-        # Clear existing pattern widgets 
+        # # Clear existing pattern widgets 
         for i in reversed(range(self.pattern_container.count())):
             widget = self.pattern_container.itemAt(i).widget()
+            # while len(self.patterns) > self.n_patterns.value():
             if widget:
-                # update the 
-                while len(self.patterns) > self.n_patterns.value():
-                    self.patterns.pop()
-                # self.n_patterns.value()
                 widget.deleteLater()
+        #     if widget:
+        #         # update the 
+        #         while len(self.patterns) > self.n_patterns.value():
+        #             self.patterns.pop()
+        #         # self.n_patterns.value()
+        #         widget.deleteLater()
 
         # Add pattern forms based on number of patterns
         n_patterns = self.n_patterns.value()
-        # self.patterns = []
+        self.patterns = []
         for i in range(n_patterns):
             group = QGroupBox(f"Pattern {i + 1}")
             layout = QFormLayout()
@@ -227,20 +333,14 @@ class LightCycleConfigurator(QMainWindow):
                         pattern_duration_value = pattern.get("pattern_duration", 60)
                         on_duration_value = pattern.get("on_duration", 30)
                         off_duration_value = pattern.get("off_duration", 30)
-                        fade_in_duration_value = pattern.get("fade_in_duration", 0)
-                        fade_out_duration_value = pattern.get("fade_out_duration", 0)
                     else:
                         pattern_duration_value = 0
                         on_duration_value = 0
                         off_duration_value = 0
-                        fade_in_duration_value = 0
-                        fade_out_duration_value = 0
             except FileNotFoundError:
                 pattern_duration_value = 0
                 on_duration_value = 0
                 off_duration_value = 0
-                fade_in_duration_value = 0
-                fade_out_duration_value = 0
 
             # Pattern duration
             pattern_duration = QSpinBox()
@@ -260,7 +360,7 @@ class LightCycleConfigurator(QMainWindow):
             on_duration_layout = QHBoxLayout()
             on_duration_layout.addWidget(on_duration)
             on_duration_layout.addWidget(on_duration_unit)
-            layout.addRow("On Duration", on_duration_layout)
+            layout.addRow("On Period", on_duration_layout)
 
             # Off duration
             off_duration = QSpinBox()
@@ -270,32 +370,11 @@ class LightCycleConfigurator(QMainWindow):
             off_duration_layout = QHBoxLayout()
             off_duration_layout.addWidget(off_duration)
             off_duration_layout.addWidget(off_duration_unit)
-            layout.addRow("Off Duration", off_duration_layout)
-
-            # Fade in duration
-            fade_in_duration = QSpinBox()
-            fade_in_duration.setValue(fade_in_duration_value)
-            fade_in_duration_unit = QComboBox()
-            fade_in_duration_unit.addItems(["seconds", "minutes", "hours"])
-            fade_in_layout = QHBoxLayout()
-            fade_in_layout.addWidget(fade_in_duration)
-            fade_in_layout.addWidget(fade_in_duration_unit)
-            layout.addRow("Fade In Duration", fade_in_layout)
-
-            # Fade out duration
-            fade_out_duration = QSpinBox()
-            fade_out_duration.setValue(fade_out_duration_value)
-            fade_out_duration_unit = QComboBox()
-            fade_out_duration_unit.addItems(["seconds", "minutes", "hours"])
-            fade_out_layout = QHBoxLayout()
-            fade_out_layout.addWidget(fade_out_duration)
-            fade_out_layout.addWidget(fade_out_duration_unit)
-            layout.addRow("Fade Out Duration", fade_out_layout)
+            layout.addRow("Off Period", off_duration_layout)
 
             group.setLayout(layout)
             self.pattern_container.addWidget(group)
-            self.patterns.append((pattern_duration, pattern_duration_unit, on_duration, on_duration_unit, off_duration, off_duration_unit,
-                                  fade_in_duration, fade_in_duration_unit, fade_out_duration, fade_out_duration_unit))
+            self.patterns.append((pattern_duration, pattern_duration_unit, on_duration, on_duration_unit, off_duration, off_duration_unit))
 
     def buttons(self):
         button_layout = QHBoxLayout()
@@ -326,13 +405,11 @@ class LightCycleConfigurator(QMainWindow):
                 "patterns": []
             }
         }
-        for (pattern_dur, pattern_unit, on_dur, on_unit, off_dur, off_unit, fade_in, fade_in_unit, fade_out, fade_out_unit) in self.patterns:
+        for (pattern_dur, pattern_unit, on_dur, on_unit, off_dur, off_unit) in self.patterns:
             pattern = {
                 "pattern_duration": self.get_seconds(pattern_dur.value(), pattern_unit.currentText()),
                 "on_duration": self.get_seconds(on_dur.value(), on_unit.currentText()),
-                "off_duration": self.get_seconds(off_dur.value(), off_unit.currentText()),
-                "fade_in_duration": self.get_seconds(fade_in.value(), fade_in_unit.currentText()),
-                "fade_out_duration": self.get_seconds(fade_out.value(), fade_out_unit.currentText())
+                "off_duration": self.get_seconds(off_dur.value(), off_unit.currentText())
             }
             config["light_cycle"]["patterns"].append(pattern)
 
@@ -369,34 +446,38 @@ class LightCycleConfigurator(QMainWindow):
 
                 while pattern_duration > 0:
                     if pattern_duration >= on_duration:
-                        if on_duration > 0:
-                            timeline.append((time, 1))
+                        if on_duration >= 0:
+                            
                             print("on  " + str(on_duration))
                             time += on_duration
                             pattern_duration -= on_duration
+
+                            timeline.append((time, 0))
                     else:
-                        timeline.append((time, 1))
+                        
                         time += pattern_duration
                         pattern_duration = 0
+                        timeline.append((time, 0))
 
                     if pattern_duration >= off_duration:
-                        if off_duration > 0:
-                            timeline.append((time, 0))
+                        if off_duration >= 0:
+                            
                             print("off " + str(off_duration))
                             time += off_duration
                             pattern_duration -= off_duration
+                            timeline.append((time, 1))
                     else:
-                        timeline.append((time, 0))
+                        
                         time += pattern_duration
                         pattern_duration = 0
+                        timeline.append((time, 1))
 
         # Plot the state transitions
         times, states = zip(*timeline)
         ax.step(times, states, where='post')
         self.canvas.draw()
 
-from serial_esp32 import SerialESP32
-from ino_utils import compile_and_upload
+
 
 if __name__ == "__main__":
 
@@ -404,21 +485,19 @@ if __name__ == "__main__":
     board_fqbn = "esp32:esp32:XIAO_ESP32S3"
     serial_port = 'COM5'
     baud_rate = 115200
-    source_file = "configuration/configuration.ino"
 
     # compile_and_upload(board_fqbn, serial_port, source_file)
 
-    esp32 = SerialESP32(serial_port, baud_rate)
+    esp32 = SerialESP32()
 
     app = QApplication(sys.argv)
     window = LightCycleConfigurator(esp32)
-    esp32.sync_time_with_esp32()
+
     window.show()
     app.exec()
-    # sys.exit(app.exec_())
 
-    esp32.close()
-    
-    print("Uploading cycle configuration...")
-    source_file = "cycle/cycle.ino"
-    # compile_and_upload(board_fqbn, serial_port, source_file)
+    if esp32.ser is not None:
+        esp32.close()
+        print("Uploading cycle configuration...")
+        source_file = "src/cycle/cycle.ino"
+        compile_and_upload(board_fqbn, serial_port, source_file)

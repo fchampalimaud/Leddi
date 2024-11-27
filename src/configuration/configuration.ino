@@ -77,8 +77,6 @@ void loop() {
             preferences.putInt(("pat_" + String(i) + "_dur").c_str(), pattern["pattern_duration"] | 0);
             preferences.putInt(("pat_" + String(i) + "_on_dur").c_str(), pattern["on_duration"] | 0);
             preferences.putInt(("pat_" + String(i) + "_off_dur").c_str(), pattern["off_duration"] | 0);
-            preferences.putInt(("pat_" + String(i) + "_fadein").c_str(), pattern["fade_in_duration"] | 0);
-            preferences.putInt(("pat_" + String(i) + "_fadeout").c_str(), pattern["fade_out_duration"] | 0);
         }
 
         // Parse start_time as a string (e.g., "09:04:01")

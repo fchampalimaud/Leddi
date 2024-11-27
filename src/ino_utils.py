@@ -18,6 +18,9 @@ def compile_and_upload(board_fqbn, port, source_file):
         subprocess.run(upload_command, check=True)
         print("Upload successful!")
 
+        return True
+
     except subprocess.CalledProcessError as e:
         print("An error occurred during compilation or upload.")
         print(e)
+        return False

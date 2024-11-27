@@ -1,0 +1,20 @@
+{
+    "light_cycle": {
+        "n_cycles": 3,
+        "delay_before_start": 1,
+        "start_time": "00:00:00",
+        "n_patterns": 2,
+        "patterns": [
+            {
+                "pattern_duration": 5,
+                "on_duration": 1,
+                "off_duration": 1
+            },
+            {
+                "pattern_duration": 3,
+                "on_duration": 1,
+                "off_duration": 1
+            }
+        ]
+    }
+}

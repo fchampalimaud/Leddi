@@ -14,20 +14,10 @@ int cycles;
 int delayBeforeStart;
 int nPatterns;
 int PatternDuration[10];
-int fadeInDuration[10];
-int fadeOutDuration[10];
 int offDuration[10];
 int onDuration[10];
 String startTime;
 
-void fadeLED(int start, int end, int duration) {
-    int stepDelay = duration * 1000 / abs(end - start);
-    for (int dutyCycle = start; dutyCycle != end; dutyCycle += (end > start ? 1 : -1)) {
-        ledcWrite(LED_PIN, dutyCycle);
-        delay(stepDelay);
-    }
-    ledcWrite(LED_PIN, end);  // Ensure it reaches the final state
-}
 
 void setup() {
     Serial.begin(115200);
@@ -48,26 +38,13 @@ void setup() {
     Serial.printf("Loaded %d cycles, %d delay before start, %d patterns, and start time %s\n", 
                   cycles, delayBeforeStart, nPatterns, startTime.c_str());
 
-    // // Initialize arrays to store pattern parameters
-    // PatternDuration[nPatterns];
-    // fadeInDuration[nPatterns];
-    // fadeOutDuration[nPatterns];
-    // offDuration[nPatterns];
-    // onDuration[nPatterns];
 
 
-    // // Loop through each pattern and load its parameters
+    // Loop through each pattern and load its parameters
     for (int i = 0; i < nPatterns; i++) {
-        // Construct keys dynamically based on index
         PatternDuration[i] = preferences.getInt(("pat_" + String(i) + "_dur").c_str(), 0);
         onDuration[i] = preferences.getInt(("pat_" + String(i) + "_on_dur").c_str(), 0);
         offDuration[i] = preferences.getInt(("pat_" + String(i) + "_off_dur").c_str(), 0);
-        fadeInDuration[i] = preferences.getInt(("pat_" + String(i) + "_fadein").c_str(), 0);
-        fadeOutDuration[i] = preferences.getInt(("pat_" + String(i) + "_fadeout").c_str(), 0);
-
-        // (Optional) You can store these values in an array or struct for later use
-        Serial.printf("Pattern %d: Duration=%d, On=%d, Off=%d, FadeIn=%d, FadeOut=%d\n", 
-                      i, PatternDuration[i], onDuration[i], offDuration[i], fadeInDuration[i], fadeOutDuration[i]);
     }
 
     // Print loaded values for debugging
@@ -107,62 +84,20 @@ void loop() {
 
         // Loop through each pattern
         for(int i = 0; i < nPatterns; i++) {
-            // Serial.printf("Pattern %d: Duration=%d, On=%d, Off=%d, FadeIn=%d, FadeOut=%d\n", 
-            //               i, PatternDuration[i], onDuration[i], offDuration[i], fadeInDuration[i], fadeOutDuration[i]);
             
             unsigned long patternStartTime = millis();
             while ((millis() - patternStartTime) < (PatternDuration[i] * 1000)) {
-                // Fade-in or turn ON LED
-                if (fadeInDuration[i] > 0) {
-                    fadeLED(255, 0, fadeInDuration[i]);
-                } else {
-                    ledcWrite(LED_PIN, 0);
-                }
+
+                ledcWrite(LED_PIN, 0);
                 delay(onDuration[i] * 1000);
 
-                // Fade-out or turn OFF LED
-                if (fadeOutDuration[i] > 0) {
-                    fadeLED(0, 255, fadeOutDuration[i]);
-                } else {
-                    ledcWrite(LED_PIN, 255);
-                }
+
+                ledcWrite(LED_PIN, 255);
                 delay(offDuration[i] * 1000);
-                // PatternDuration[i]--;
+
             }
-
-            // // Fade-in or turn ON LED
-            // if (fadeInDuration[i] > 0) {
-            //     fadeLED(255, 0, fadeInDuration[i]);
-            // } else {
-            //     ledcWrite(LED_PIN, 0);
-            // }
-            // delay(onDuration[i] * 1000);
-
-            // // Fade-out or turn OFF LED
-            // if (fadeOutDuration[i] > 0) {
-            //     fadeLED(0, 255, fadeOutDuration[i]);
-            // } else {
-            //     ledcWrite(LED_PIN, 255);
-            // }
-            // delay(offDuration[i] * 1000);
-            
+     
         }
 
-
-        // // Fade-in or turn ON LED
-        // if (fadeInDuration > 0) {
-        //     fadeLED(255, 0, fadeInDuration);
-        // } else {
-        //     ledcWrite(LED_PIN, 0);
-        // }
-        // delay(onDuration * 1000);
-
-        // // Fade-out or turn OFF LED
-        // if (fadeOutDuration > 0) {
-        //     fadeLED(0, 255, fadeOutDuration);
-        // } else {
-        //     ledcWrite(LED_PIN, 255);
-        // }
-        // delay(offDuration * 1000);   
     }
 }
