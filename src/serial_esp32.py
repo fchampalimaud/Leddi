@@ -62,6 +62,12 @@ class SerialESP32:
             print("Serial port is not open")
 
 
+    def read(self):
+        if self.ser.is_open:
+            return self.ser.readline().decode('utf-8').strip()
+        else:
+            print("Serial port is not open")
+
     def close(self):
         self.ser.close()
 

@@ -420,6 +420,14 @@ class LightCycleConfigurator(QMainWindow):
         print('Here data:' + data)
         self.esp32.upload_config(data)
 
+        # if self.esp32.ser is not None:
+        #     self.esp32.close()
+        #     print("Uploading cycle configuration...")
+        #     source_file = "src/cycle/cycle.ino"
+        #     compile_and_upload(self.board_fqbn, self.serial_port, source_file)
+        #     self.esp32.read()
+        #     self.esp32.read()
+
     def get_seconds(self, value, unit):
         # Convert value to seconds based on unit
         if unit == "minutes":

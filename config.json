@@ -1,8 +1,8 @@
 {
     "light_cycle": {
-        "n_cycles": 1,
+        "n_cycles": 4,
         "delay_before_start": 0,
-        "start_time": "00:00:00",
+        "start_time": "17:51:00",
         "n_patterns": 2,
         "patterns": [
             {

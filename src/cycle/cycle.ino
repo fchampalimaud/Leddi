@@ -1,5 +1,6 @@
 #include <Preferences.h>
 #include <time.h>
+#include <esp_psram.h>
 // Define LED pin and constants
 const int LED_PIN = LED_BUILTIN; 
 bool isSynced = false;  // Flag to track if sync has already occurred
@@ -21,8 +22,8 @@ String startTime;
 
 void setup() {
     Serial.begin(115200);
-    Serial.println("Loading configuration...");
-    Serial.println("Coucou");
+    // Serial.println("Loading configuration...");
+    // Serial.println("Coucou");
     // Attach LED pin to PWM with specified frequency and resolution
     ledcAttach(LED_PIN, PWM_FREQUENCY, PWM_RESOLUTION);
     ledcWrite(LED_PIN, 255);  // Ensure LED is off by default
@@ -58,13 +59,18 @@ void setup() {
 
 void loop() {
 
+
+    struct timeval tv_now;
+    gettimeofday(&tv_now, NULL);
+    Serial.println("Current time: " + String(ctime(&tv_now.tv_sec)));
+
     // Get the current time
     struct tm timeinfo;
+    Serial.println("Current time: " + String(ctime(&tv_now.tv_sec)));
     if (!getLocalTime(&timeinfo)) {
+        Serial.println("Failed to obtain time");
         return;
     }
-
-
 
     // Parse the start time
     int startHour, startMinute, startSecond;
@@ -81,7 +87,7 @@ void loop() {
     // Execute light cycles
     for (int cycle = 0; cycle < cycles; cycle++) {
 
-
+        Serial.printf("cycle %d\n",cycle); // this not  aglobal variable
         // Loop through each pattern
         for(int i = 0; i < nPatterns; i++) {
             

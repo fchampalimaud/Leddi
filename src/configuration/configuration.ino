@@ -83,6 +83,8 @@ void loop() {
         const char* startTime = lightCycle["start_time"];
         preferences.putString("start_time", startTime);
 
+        // preferences.end();
+
 
     }
     
