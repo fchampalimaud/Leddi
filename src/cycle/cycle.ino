@@ -1,6 +1,8 @@
 #include <Preferences.h>
 #include <time.h>
 #include <esp_psram.h>
+#include <esp_sleep.h>
+#define uS_TO_S_FACTOR 1000000  // Microseconds to seconds conversion
 // Define LED pin and constants
 const int LED_PIN = LED_BUILTIN; 
 bool isSynced = false;  // Flag to track if sync has already occurred
@@ -22,9 +24,6 @@ String startTime;
 
 void setup() {
     Serial.begin(115200);
-    // Serial.println("Loading configuration...");
-    // Serial.println("Coucou");
-    // Attach LED pin to PWM with specified frequency and resolution
     ledcAttach(LED_PIN, PWM_FREQUENCY, PWM_RESOLUTION);
     ledcWrite(LED_PIN, 255);  // Ensure LED is off by default
 
@@ -38,8 +37,6 @@ void setup() {
     startTime = preferences.getString("start_time", "00:00:00");
     Serial.printf("Loaded %d cycles, %d delay before start, %d patterns, and start time %s\n", 
                   cycles, delayBeforeStart, nPatterns, startTime.c_str());
-
-
 
     // Loop through each pattern and load its parameters
     for (int i = 0; i < nPatterns; i++) {
@@ -76,34 +73,57 @@ void loop() {
     int startHour, startMinute, startSecond;
     sscanf(startTime.c_str(), "%d:%d:%d", &startHour, &startMinute, &startSecond);
 
-    if (timeinfo.tm_hour < startHour || 
-        (timeinfo.tm_hour == startHour && timeinfo.tm_min < startMinute) || 
-        (timeinfo.tm_hour == startHour && timeinfo.tm_min == startMinute && timeinfo.tm_sec < startSecond)) {
-        return;  // Exit the loop if the current time is before the start time
-    }
+    // if (timeinfo.tm_hour < startHour || 
+    //     (timeinfo.tm_hour == startHour && timeinfo.tm_min < startMinute) || 
+    //     (timeinfo.tm_hour == startHour && timeinfo.tm_min == startMinute && timeinfo.tm_sec < startSecond)) {
+    //     return;  // Exit the loop if the current time is before the start time
+    // }
 
-    delay(delayBeforeStart * 1000);
+    // Calculate seconds until the target time
+    int currentTimeInSeconds = (timeinfo.tm_hour * 3600) + (timeinfo.tm_min * 60) + timeinfo.tm_sec;
+    int targetTimeInSeconds = (startHour * 3600) + (startMinute * 60) + startSecond;
 
-    // Execute light cycles
-    for (int cycle = 0; cycle < cycles; cycle++) {
+    if (currentTimeInSeconds < targetTimeInSeconds) {
+        int sleepDuration = (targetTimeInSeconds - currentTimeInSeconds);
+        Serial.printf("Sleeping for %d seconds...\n", sleepDuration);
 
-        Serial.printf("cycle %d\n",cycle); // this not  aglobal variable
-        // Loop through each pattern
-        for(int i = 0; i < nPatterns; i++) {
-            
-            unsigned long patternStartTime = millis();
-            while ((millis() - patternStartTime) < (PatternDuration[i] * 1000)) {
+        // Enable Timer Wakeup
+        esp_sleep_enable_timer_wakeup(sleepDuration * uS_TO_S_FACTOR);
 
-                ledcWrite(LED_PIN, 0);
-                delay(onDuration[i] * 1000);
+        Serial.println("Entering Light Sleep Mode...");
+        esp_light_sleep_start();  // Enter Light Sleep
+
+        Serial.println("Woke up!");
+    } else {
 
 
-                ledcWrite(LED_PIN, 255);
-                delay(offDuration[i] * 1000);
+
+
+        delay(delayBeforeStart * 1000);
+
+        // Execute light cycles
+        for (int cycle = 0; cycle < cycles; cycle++) {
+
+            Serial.printf("cycle %d\n", cycle); // this not a global variable
+            // Loop through each pattern
+            for (int i = 0; i < nPatterns; i++) {
+
+                unsigned long patternStartTime = millis();
+                while ((millis() - patternStartTime) < (PatternDuration[i] * 1000)) {
+
+                    ledcWrite(LED_PIN, 0);
+                    delay(onDuration[i] * 1000);
+
+                    ledcWrite(LED_PIN, 255);
+                    delay(offDuration[i] * 1000);
+
+                }
 
             }
-     
+
         }
+
+        esp_deep_sleep_start();
 
     }
 }

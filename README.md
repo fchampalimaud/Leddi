@@ -40,3 +40,28 @@ otherwise noted. Light cycles were programmed by connecting to a
 DC2100 LED driver with pulse modulation (ThorLabs, Newton, NJ,
 USA). The light intensity was measured by using an optical power
 meter from ThorLabs (Newton, NJ, USA)
+
+
+# Installation
+
+
+# Usage Instructions
+
+1. Plug the **Leedi** device into your computer via **USB**.
+2. Open **PowerShell** (or your preferred terminal) and navigate to the directory where the program is installed, activate the environment and run the main script:
+
+   ```bash
+   cd path/to/Leedi
+   uv init
+   uv run .\src\main.py
+   ```
+
+3. Once the application window opens, locate the correct **COM port** where the device is connected, and press `Connect`.
+    Wait until the status changes from **Not Connected** to **Connected** (🔴 → 🟢). This process can take up to **30 seconds**, during which the interface will be **non-responsive**.
+
+4. Adjust the **main settings** and **lighting patterns**, or load a pre-set configuration from a **JSON file**.
+5. (Optional) Click `Generate Plot` to visualize the lighting pattern before applying it.
+6. Press `Configure` to upload the settings to the device.
+7. Close the application window. Wait **30 seconds** before unplugging the device from your computer.
+
+
