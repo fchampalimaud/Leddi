@@ -6,8 +6,24 @@
 Leedi is a programmable LED light control system designed to manage lighting schedules using an internal Real-Time Clock (RTC). This system synchronizes the clock via serial communication, enabling automatic time updates to maintain consistent schedules. The schedules are stored in the microcontroller's flash memory, allowing the system to operate autonomously. This makes Leedi particularly useful for applications such as circadian rhythm studies.
 
 
-## Features
 
+
+#
+
+Configure cycles and patterns respectivly. A cycle in one complete repetition of a pattern. 
+
+
+for in vitro light stimulation, cells were
+stimulated at 24 h after transfection with a 30 s ON and 30 s OFF blue
+light pulse (470 nm, 0.1–4 mW/cm2
+; ThorLabs, Newton, NJ, USA) unless
+otherwise noted. Light cycles were programmed by connecting to a
+DC2100 LED driver with pulse modulation (ThorLabs, Newton, NJ,
+USA). The light intensity was measured by using an optical power
+meter from ThorLabs (Newton, NJ, USA)
+
+
+# **Installation Instructions**
 
 ## Requirements
 - **Hardware**: Seeed Studio XIAO ESP32S3 microcontroller.
@@ -27,41 +43,40 @@ arduino-cli core install esp32:esp32
 ```
 
 
-#
-
-Configure cycles and patterns respectivly. A cycle in one complete repetition of a pattern. 
 
 
-for in vitro light stimulation, cells were
-stimulated at 24 h after transfection with a 30 s ON and 30 s OFF blue
-light pulse (470 nm, 0.1–4 mW/cm2
-; ThorLabs, Newton, NJ, USA) unless
-otherwise noted. Light cycles were programmed by connecting to a
-DC2100 LED driver with pulse modulation (ThorLabs, Newton, NJ,
-USA). The light intensity was measured by using an optical power
-meter from ThorLabs (Newton, NJ, USA)
+# **Usage Instructions**  
 
+## **1. Connect the Device**  
+- Plug the **Leedi** device into your computer using a **USB** cable.  
 
-# Installation
-
-
-# Usage Instructions
-
-1. Plug the **Leedi** device into your computer via **USB**.
-2. Open **PowerShell** (or your preferred terminal) and navigate to the directory where the program is installed, activate the environment and run the main script:
+## **2. Launch the Application**  
+1. Open **PowerShell** (or your preferred terminal).  
+2. Navigate to the directory where the program is installed, activate the environment, and run the main script:  
 
    ```bash
    cd path/to/Leedi
    uv init
    uv run .\src\main.py
-   ```
+   ```  
 
-3. Once the application window opens, locate the correct **COM port** where the device is connected, and press `Connect`.
-    Wait until the status changes from **Not Connected** to **Connected** (🔴 → 🟢). This process can take up to **30 seconds**, during which the interface will be **non-responsive**.
+## **3. Establish Connection**  
+- When the application window opens, select the correct **COM port** for your device.  
+- Click `Connect` and wait for the status to change from **Not Connected** to **Connected** (this may take up to **30 seconds**).  
+  - During this time, the interface may be **unresponsive**.  
 
-4. Adjust the **main settings** and **lighting patterns**, or load a pre-set configuration from a **JSON file**.
-5. (Optional) Click `Generate Plot` to visualize the lighting pattern before applying it.
-6. Press `Configure` to upload the settings to the device.
-7. Close the application window. Wait **30 seconds** before unplugging the device from your computer.
+## **4. Configure Settings**  
+- Adjust the **main settings** and **lighting patterns** as needed.  
+- (Optional) Load a pre-saved configuration from a **JSON file**.  
 
+## **5. Preview (Optional)**  
+- Click `Generate Plot` to visualize the lighting pattern before applying it.  
 
+## **6. Apply Configuration**  
+- Press `Configure` to upload the settings to the device.  
+
+## **7. Safely Disconnect**  
+- Close the application window.  
+- Wait **30 seconds** before unplugging the device to ensure proper shutdown.  
+
+---
