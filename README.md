@@ -52,12 +52,10 @@ arduino-cli core install esp32:esp32
 
 ## **2. Launch the Application**  
 1. Open **PowerShell** (or your preferred terminal).  
-2. Navigate to the directory where the program is installed, activate the environment, and run the main script:  
+2. Navigate to the directory where the program is installedand run:  
 
    ```bash
-   cd path/to/Leedi
-   uv init
-   uv run .\src\main.py
+   ./run_leddi.cmd
    ```  
 
 ## **3. Establish Connection**  
