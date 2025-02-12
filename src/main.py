@@ -11,10 +11,7 @@ if __name__ == "__main__":
 
     # Specify board details
     board_fqbn = "esp32:esp32:XIAO_ESP32S3"
-    serial_port = 'COM8'
     baud_rate = 115200
-
-    # compile_and_upload(board_fqbn, serial_port, source_file)
 
     esp32 = SerialESP32()
 
@@ -28,4 +25,4 @@ if __name__ == "__main__":
         esp32.close()
         print("Uploading cycle configuration...")
         source_file = "src/cycle/cycle.ino"
-        compile_and_upload(board_fqbn, serial_port, source_file)
+        compile_and_upload(board_fqbn, window.serial_port, source_file)

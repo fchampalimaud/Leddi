@@ -26,6 +26,10 @@ if (!(Test-Path ".venv\Scripts\arduino-cli.exe")) {
     Invoke-WebRequest "https://downloads.arduino.cc/arduino-cli/arduino-cli_latest_Windows_64bit.zip" -OutFile "temp.zip"
     Expand-Archive "temp.zip" -DestinationPath ".\.venv\Scripts" -Force
     Remove-Item -Path "temp.zip"
+
+    .venv\Scripts\arduino-cli.exe core update-index
+    .venv\Scripts\arduino-cli.exe core install esp32:esp32
+    .venv\Scripts\arduino-cli.exe lib install "ArduinoJson"
 }
 
 # Activate the environment (adjust if using virtual environments)
