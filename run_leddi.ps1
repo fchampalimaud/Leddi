@@ -10,7 +10,7 @@ $EnvPath = ".venv\Scripts\activate"
 # Check if the virtual environment activation script exists
 if (!(Test-Path $EnvPath)) {
     # If not found, run `uv` to create the virtual environment
-    uv run
+    uv venv
 
     # Activate the virtual environment
     & $EnvPath
@@ -27,8 +27,8 @@ if (!(Test-Path ".venv\Scripts\arduino-cli.exe")) {
     Expand-Archive "temp.zip" -DestinationPath ".\.venv\Scripts" -Force
     Remove-Item -Path "temp.zip"
 
-    .venv\Scripts\arduino-cli.exe core update-index
-    .venv\Scripts\arduino-cli.exe core install esp32:esp32
+    arduino-cli lib update-index
+    arduino-cli core install esp32:esp32@3.0.7
     .venv\Scripts\arduino-cli.exe lib install "ArduinoJson"
 }
 

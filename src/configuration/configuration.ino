@@ -48,7 +48,8 @@ void loop() {
 
     if (jsonString) {
         Serial.println("Received JSON: " + jsonString);
-
+ 
+        
         // Parse JSON
         StaticJsonDocument<256> doc;
         DeserializationError error = deserializeJson(doc, jsonString);

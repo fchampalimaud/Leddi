@@ -1,10 +1,8 @@
-
 from serial_esp32 import SerialESP32
 from ino_utils import compile_and_upload
 from PySide6.QtWidgets import QApplication
 import sys
 from interface_pysite import LightCycleConfigurator
-
 
 
 if __name__ == "__main__":

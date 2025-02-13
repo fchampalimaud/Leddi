@@ -1,12 +1,12 @@
 {
     "light_cycle": {
-        "n_cycles": 12,
+        "n_cycles": 33,
         "delay_before_start": 0,
-        "start_time": "14:50:00",
+        "start_time": "10:50:00",
         "n_patterns": 1,
         "patterns": [
             {
-                "pattern_duration": 10,
+                "pattern_duration": 600,
                 "on_duration": 1,
                 "off_duration": 1
             }

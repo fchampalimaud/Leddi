@@ -245,8 +245,6 @@ class LightCycleConfigurator(QMainWindow):
         # Update the COM port based on dropdown selection
         selected_port = self.com_port_dropdown.currentText()
         self.serial_port = selected_port
-        # print(f"Selected COM port: {selected_port}")
-        # self.esp32.set_port(selected_port)
 
     def config_form(self):
         # Main configuration form
@@ -304,18 +302,11 @@ class LightCycleConfigurator(QMainWindow):
         self.main_layout.addWidget(self.main_settings_group)
 
     def update_patterns(self):
-        # # Clear existing pattern widgets 
+        # Clear existing pattern widgets 
         for i in reversed(range(self.pattern_container.count())):
             widget = self.pattern_container.itemAt(i).widget()
-            # while len(self.patterns) > self.n_patterns.value():
             if widget:
                 widget.deleteLater()
-        #     if widget:
-        #         # update the 
-        #         while len(self.patterns) > self.n_patterns.value():
-        #             self.patterns.pop()
-        #         # self.n_patterns.value()
-        #         widget.deleteLater()
 
         # Add pattern forms based on number of patterns
         n_patterns = self.n_patterns.value()
@@ -420,14 +411,6 @@ class LightCycleConfigurator(QMainWindow):
         print('Here data:' + data)
         self.esp32.upload_config(data)
 
-        # if self.esp32.ser is not None:
-        #     self.esp32.close()
-        #     print("Uploading cycle configuration...")
-        #     source_file = "src/cycle/cycle.ino"
-        #     compile_and_upload(self.board_fqbn, self.serial_port, source_file)
-        #     self.esp32.read()
-        #     self.esp32.read()
-
     def get_seconds(self, value, unit):
         # Convert value to seconds based on unit
         if unit == "minutes":
@@ -455,8 +438,7 @@ class LightCycleConfigurator(QMainWindow):
                 while pattern_duration > 0:
                     if pattern_duration >= on_duration:
                         if on_duration >= 0:
-                            
-                            print("on  " + str(on_duration))
+                        
                             time += on_duration
                             pattern_duration -= on_duration
 
@@ -470,7 +452,6 @@ class LightCycleConfigurator(QMainWindow):
                     if pattern_duration >= off_duration:
                         if off_duration >= 0:
                             
-                            print("off " + str(off_duration))
                             time += off_duration
                             pattern_duration -= off_duration
                             timeline.append((time, 1))
@@ -484,28 +465,3 @@ class LightCycleConfigurator(QMainWindow):
         times, states = zip(*timeline)
         ax.step(times, states, where='post')
         self.canvas.draw()
-
-
-
-if __name__ == "__main__":
-
-    # Specify board details
-    board_fqbn = "esp32:esp32:XIAO_ESP32S3"
-    serial_port = 'COM5'
-    baud_rate = 115200
-
-    # compile_and_upload(board_fqbn, serial_port, source_file)
-
-    esp32 = SerialESP32()
-
-    app = QApplication(sys.argv)
-    window = LightCycleConfigurator(esp32)
-
-    window.show()
-    app.exec()
-
-    if esp32.ser is not None:
-        esp32.close()
-        print("Uploading cycle configuration...")
-        source_file = "src/cycle/cycle.ino"
-        compile_and_upload(board_fqbn, serial_port, source_file)
