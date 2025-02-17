@@ -1,12 +1,12 @@
 # Leddi - Lighting Control System
 
 ### Overview
-Leedi is a programmable LED light control system designed to manage lighting schedules using an internal Real-Time Clock (RTC). This system synchronizes the clock via serial communication, enabling automatic time updates to maintain consistent schedules. The schedules are stored in the microcontroller's flash memory, allowing the system to operate autonomously. This makes Leedi particularly useful for applications such as circadian rhythm studies.
+Leddi is a programmable LED light control system designed to manage lighting schedules using an internal Real-Time Clock (RTC). This system synchronizes the clock via serial communication, enabling automatic time updates to maintain consistent schedules. The schedules are stored in the microcontroller's flash memory, allowing the system to operate autonomously. This makes Leddi particularly useful for applications such as circadian rhythm studies.
 
 # **Usage Instructions**  
 
 ## **1. Connect the Device**  
-- Plug the **Leedi** device into your computer using a **USB** cable.  
+- Plug the **Leddi** device into your computer using a **USB** cable.  
 
 ## **2. Launch the Application**  
 1. Open **PowerShell** (or your preferred terminal).  
