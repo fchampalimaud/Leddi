@@ -79,7 +79,37 @@ directories:
 
     # Install the ArduinoJson library locally
     Write-Host "Installing ArduinoJson library locally..."
-    .venv\Scripts\arduino-cli.exe --config-file $configFile lib install "ArduinoJson"
+    .venv\Scripts\arduino-cli.exe --config-file $configFile lib install "ArduinoJson"=@7.3.0
+
+    # Clean up the ArduinoJson .zip file
+    Write-Host "Cleaning up ArduinoJson .zip file..."
+    $zipFile = Get-ChildItem -Path $localLibrariesDir -Filter "ArduinoJson-*.zip" | Select-Object -First 1
+
+    if ($zipFile) {
+        Write-Host "Deleting $($zipFile.FullName)..."
+        Remove-Item -Path $zipFile.FullName
+        Write-Host "Cleanup complete!"
+    } else {
+        Write-Host "No ArduinoJson .zip file found in $localLibrariesDir."
+    }
+
+    # Clean up all .zip and .tar.gz files in the packages directory
+    Write-Host "Cleaning up .zip and .tar.gz files in packages directory..."
+    $zipAndTarFiles = Get-ChildItem -Path $localPackagesDir -Include *.zip, *.tar.gz -Recurse
+
+    if ($zipAndTarFiles) {
+        Write-Host "Found $($zipAndTarFiles.Count) .zip/.tar.gz files. Deleting them..."
+        $zipAndTarFiles | ForEach-Object {
+            Write-Host "Deleting $($_.FullName)..."
+            Remove-Item -Path $_.FullName
+        }
+        Write-Host "Cleanup complete in packages directory!"
+    } else {
+        Write-Host "No .zip or .tar.gz files found in $localPackagesDir."
+    }
+
+
+
 } else {
     Write-Host "Error: arduino-cli.exe was not found after extraction."
 }
