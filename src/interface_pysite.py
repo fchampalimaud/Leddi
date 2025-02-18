@@ -43,36 +43,14 @@ class LightCycleConfigurator(QMainWindow):
         self.setCentralWidget(scroll_area)
         self.main_layout = QVBoxLayout(scroll_content) # vertically lining up the widgets
 
-        # Create the logo widget
+        # Logo widget
         logo = QSvgWidget('./src/Assets/cf_hardware_software_logo.svg')
-        # print(logo.size())
-        # logo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        # logo.setFixedSize(64, 64)  # Ensures the widget has a specific size (640, 480)
-
-        # Create a layout to position the logo
         logo_layout = QHBoxLayout()
-        # logo.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
         logo.setFixedSize(100, 40)
         logo.renderer().setAspectRatioMode(Qt.KeepAspectRatio)
-        # logo.setFixedSize(100, 35)
-        # logo_layout.addWidget(logo, alignment=Qt.AlignRight | Qt.AlignTop)
         self.main_layout.addWidget(logo, alignment=Qt.AlignRight | Qt.AlignTop)
-        # Ensure no unwanted margins or spacing
-        # logo_layout.setContentsMargins(1, 1, 1, 1)
-        # logo_layout.setSpacing(0)
-        # self.main_layout.addLayout(logo_layout)
 
-        # logo
-        # .setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-
-
-        # logo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        # logo.setFixedSize(100, 35)  # Ensures the widget has a specific size
-
-        # Create a spacer and a layout to position the logo
-        # self.main_layout.addWidget(logo, alignment=Qt.AlignRight | Qt.AlignTop)  # Align logo to top-right corner
-
+        # Title label
         title_label = QLabel("Light Cycle Configurator")
         font = title_label.font()
         title_label.setFixedHeight(25)
@@ -81,26 +59,21 @@ class LightCycleConfigurator(QMainWindow):
         title_label.setFont(font)
         title_label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         self.main_layout.addWidget(title_label)
-
-        # Create a help button
-        help_button = QPushButton("Help")
-        help_button.clicked.connect(self.show_help)
-
-        # Create a layout to position the title and help button
         title_layout = QHBoxLayout()
         title_layout.addWidget(title_label)
+        
+        # Help button
+        help_button = QPushButton("Help")
+        help_button.clicked.connect(self.show_help)
         title_layout.addWidget(help_button, alignment=Qt.AlignRight)
         self.main_layout.addLayout(title_layout)
-        
 
-        # Create a load preexisting configuration button
+        # Load preexisting configuration button
         load_config_button = QPushButton("  Load Pre-set Configuration  ")
         button_layout = QHBoxLayout()
         button_layout.addWidget(load_config_button, alignment=Qt.AlignRight)
         self.main_layout.addLayout(button_layout)
         load_config_button.clicked.connect(self.load_config)
-
-
 
         self.window_loading()
 
@@ -126,12 +99,30 @@ class LightCycleConfigurator(QMainWindow):
         self.help_window.setGeometry(200, 200, 400, 300)
 
         help_layout = QVBoxLayout(self.help_window)
-        help_text = QLabel(" <b> Instructions on how to use the application:</b><br><br>"
-                "<b>1.</b> Select the COM port and click 'Connect'.<br>"
-                "<b>2.</b> Configure the main settings and patterns.<br>"
-                "<b>3.</b> Click 'Configure' to generate the JSON configuration.<br>"
-                "<b>4.</b> Click 'Generate Plot' to visualize the light cycle.<br>"
-                "<b>5.</b> Upload the configuration to the ESP32 device.")
+        # help_text = QLabel(" <b> Instructions on how to use the application:</b><br><br>"
+        #         "<b>1.</b> Select the COM port and click 'Connect'.<br>"
+        #         "<b>2.</b> Configure the main settings and patterns.<br>"
+        #         "<b>3.</b> Click 'Configure' to generate the JSON configuration.<br>"
+        #         "<b>4.</b> Click 'Generate Plot' to visualize the light cycle.<br>"
+        #         "<b>5.</b> Upload the configuration to the ESP32 device.")
+        help_text = QLabel(
+            " <b> Instructions on how to use the application:</b><br><br>"
+            "<b>1. Establish Connection</b><br>"
+            "&nbsp;&nbsp;&nbsp;&nbsp;- When the application window opens, select the correct COM port for your device.<br>"
+            "&nbsp;&nbsp;&nbsp;&nbsp;- Click 'Connect' and wait for the status to change from 'Not Connected' to 'Connected' (this may take up to 30 seconds).<br>"
+            "&nbsp;&nbsp;&nbsp;&nbsp;- During this time, the interface may be unresponsive.<br><br>"
+            "<b>2. Configure Settings</b><br>"
+            "&nbsp;&nbsp;&nbsp;&nbsp;- Adjust the main settings and lighting patterns as needed.<br>"
+            "&nbsp;&nbsp;&nbsp;&nbsp;- (Optional) Load a pre-saved configuration from a JSON file.<br><br>"
+            "<b>3. Preview (Optional)</b><br>"
+            "&nbsp;&nbsp;&nbsp;&nbsp;- Click 'Generate Plot' to visualize the lighting pattern before applying it.<br><br>"
+            "<b>4. Apply Configuration</b><br>"
+            "&nbsp;&nbsp;&nbsp;&nbsp;- Press 'Configure' to upload the settings to the device.<br><br>"
+            "<b>5. Safely Disconnect</b><br>"
+            "&nbsp;&nbsp;&nbsp;&nbsp;- Close the application window.<br>"
+            "&nbsp;&nbsp;&nbsp;&nbsp;- Wait 30 seconds before unplugging the device to ensure proper shutdown.<br><br>"
+            "<i>This application was developed by the Hardware and Software Platform at the Champalimaud Foundation.</i>"
+        )
         help_text.setWordWrap(True)
         help_layout.addWidget(help_text)
 

@@ -4,12 +4,6 @@ def compile_and_upload(board_fqbn, port, source_file):
     config_file = ".arduino/arduino-cli.yaml"
     try:
 
-        # # Check if the ESP32 core is installed
-        # print("Checking if the ESP32 core is installed...")
-        # core_list_command = [
-        #     "arduino-cli", "core", "list", "--config-file", config_file
-        # ]
-        # subprocess.run(core_list_command, check=True)
         # Compile the sketch
         print("Compiling the sketch...")
         compile_command = [
