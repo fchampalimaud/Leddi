@@ -3,11 +3,9 @@
 #include <esp_psram.h>
 #include <esp_sleep.h>
 #define uS_TO_S_FACTOR 1000000  // Microseconds to seconds conversion
-// Define LED pin and constants
-const int LED_PIN = LED_BUILTIN; 
+
+const int LED_PIN = 1; // GPIO 1
 bool isSynced = false;  // Flag to track if sync has already occurred
-const int PWM_FREQUENCY = 5000; // Frequency in Hz
-const int PWM_RESOLUTION = 8;   // 8-bit resolution: duty cycle range from 0 to 255
 
 
 Preferences preferences;
@@ -24,8 +22,7 @@ String startTime;
 
 void setup() {
     Serial.begin(115200);
-    ledcAttach(LED_PIN, PWM_FREQUENCY, PWM_RESOLUTION);
-    ledcWrite(LED_PIN, 255);  // Ensure LED is off by default
+    pinMode(LED_PIN, OUTPUT);
 
     // Initialize preferences with the same namespace
     preferences.begin("config", true);  // `true` means read-only mode
@@ -73,11 +70,6 @@ void loop() {
     int startHour, startMinute, startSecond;
     sscanf(startTime.c_str(), "%d:%d:%d", &startHour, &startMinute, &startSecond);
 
-    // if (timeinfo.tm_hour < startHour || 
-    //     (timeinfo.tm_hour == startHour && timeinfo.tm_min < startMinute) || 
-    //     (timeinfo.tm_hour == startHour && timeinfo.tm_min == startMinute && timeinfo.tm_sec < startSecond)) {
-    //     return;  // Exit the loop if the current time is before the start time
-    // }
 
     // Calculate seconds until the target time
     int currentTimeInSeconds = (timeinfo.tm_hour * 3600) + (timeinfo.tm_min * 60) + timeinfo.tm_sec;
@@ -111,10 +103,10 @@ void loop() {
                 unsigned long patternStartTime = millis();
                 while ((millis() - patternStartTime) < (PatternDuration[i] * 1000)) {
 
-                    ledcWrite(LED_PIN, 0);
+                    digitalWrite(LED_PIN, HIGH);
                     delay(onDuration[i] * 1000);
 
-                    ledcWrite(LED_PIN, 255);
+                    digitalWrite(LED_PIN, LOW);
                     delay(offDuration[i] * 1000);
 
                 }

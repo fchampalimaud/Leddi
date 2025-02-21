@@ -1,5 +1,6 @@
 import sys
 import json
+import serial.tools.list_ports
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QComboBox, QPushButton, QSpinBox, QTimeEdit, QGroupBox, QFormLayout, QScrollArea, QSizePolicy, QSpacerItem
@@ -18,6 +19,15 @@ from serial_esp32 import SerialESP32
 from ino_utils import compile_and_upload
 import threading
 from PySide6.QtWidgets import QFileDialog
+
+class RefreshableComboBox(QComboBox):
+    def __init__(self, refresh_callback, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.refresh_callback = refresh_callback
+
+    def showPopup(self):
+        self.refresh_callback()
+        super().showPopup()
 
 class LightCycleConfigurator(QMainWindow):
     def __init__(self, esp32):
@@ -99,12 +109,6 @@ class LightCycleConfigurator(QMainWindow):
         self.help_window.setGeometry(200, 200, 400, 300)
 
         help_layout = QVBoxLayout(self.help_window)
-        # help_text = QLabel(" <b> Instructions on how to use the application:</b><br><br>"
-        #         "<b>1.</b> Select the COM port and click 'Connect'.<br>"
-        #         "<b>2.</b> Configure the main settings and patterns.<br>"
-        #         "<b>3.</b> Click 'Configure' to generate the JSON configuration.<br>"
-        #         "<b>4.</b> Click 'Generate Plot' to visualize the light cycle.<br>"
-        #         "<b>5.</b> Upload the configuration to the ESP32 device.")
         help_text = QLabel(
             " <b> Instructions on how to use the application:</b><br><br>"
             "<b>1. Establish Connection</b><br>"
@@ -151,24 +155,28 @@ class LightCycleConfigurator(QMainWindow):
             except Exception as e:
                 print(f"Failed to load configuration: {e}")
 
-
+    def get_available_com_ports(self):
+            ports = serial.tools.list_ports.comports()
+            return [port.device for port in ports]
 
     def window_loading(self):
         
         # Create a dropdown menu for COM port selection
-        self.com_port_dropdown = QComboBox()
+        self.com_port_dropdown = RefreshableComboBox(self.refresh_com_ports)
 
-        import serial.tools.list_ports
+        # self.com_port_dropdown = QComboBox()
+        # self.com_port_dropdown.popupAboutToBeShown.connect(self.refresh_com_ports)
 
-        def get_available_com_ports():
-            ports = serial.tools.list_ports.comports()
-            return [port.device for port in ports]
+
+        
+
+        
 
         
         port_label = QLabel("Port:")
         self.com_port_dropdown.currentIndexChanged.connect(self.update_com_port)
         com_port_layout = QHBoxLayout()
-        self.com_port_dropdown.addItems(get_available_com_ports())
+        self.com_port_dropdown.addItems(self.get_available_com_ports())
 
         com_port_layout.addWidget(port_label)
         com_port_layout.addWidget(self.com_port_dropdown)
@@ -178,9 +186,13 @@ class LightCycleConfigurator(QMainWindow):
         self.connect_button.clicked.connect(self.upload_sketch)
         com_port_layout.addWidget(self.connect_button)
 
+        # # add the refresh button
+        # self.refresh_button = QPushButton("🔄")
+        # self.refresh_button.setFixedWidth(20)
+        # self.refresh_button.setStyleSheet("padding: 0px; margin: 0px;")
+        # self.refresh_button.clicked.connect(self.refresh_com_ports)
+        # com_port_layout.addWidget(self.refresh_button)
 
-  
-      
         self.main_layout.addLayout(com_port_layout)
 
         # Create a label to show loading status
@@ -189,22 +201,6 @@ class LightCycleConfigurator(QMainWindow):
         self.loading_label.setAlignment(Qt.AlignRight)
         self.main_layout.addWidget(self.loading_label)
         
-
-        # Start a timer to update the loading label
-        # self.loading_timer = self.startTimer(500)  # Update every 500 ms
-
-        # Create a button to connect to the ESP32
-
-        # self.connect_button.clicked.connect(self.esp32.connect)
-        # self.main_layout.addWidget(self.connect_button)
-
-        # # Create a label to show loading status
-        # self.loading_label = QLabel("Loading...")
-        # self.loading_label.setAlignment(Qt.AlignLeft)
-        # self.main_layout.addWidget(self.loading_label)
-
-        # # Start a timer to update the loading label
-        # self.loading_timer = self.startTimer(500)  # Update every 500 ms
     
     def upload_sketch(self):
         # Upload the sketch to the ESP32
@@ -223,6 +219,11 @@ class LightCycleConfigurator(QMainWindow):
             print(f"An error occurred during compilation or upload: {e}")
             self.loading_label.setStyleSheet("color: red;")
             self.loading_label.setText("Connection failed")
+
+    def refresh_com_ports(self):
+        # Refresh the list of available COM ports
+        self.com_port_dropdown.clear()
+        self.com_port_dropdown.addItems(self.get_available_com_ports())
 
     def timerEvent(self, event):
         # Update the loading label with iterative dots
