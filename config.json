@@ -6,9 +6,9 @@
         "n_patterns": 1,
         "patterns": [
             {
-                "pattern_duration": 20,
-                "on_duration": 20,
-                "off_duration": 0
+                "pattern_duration": 200,
+                "on_duration": 1,
+                "off_duration": 1
             }
         ]
     }

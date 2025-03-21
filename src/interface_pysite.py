@@ -9,8 +9,7 @@ from PySide6.QtCore import Qt, QTime
 from PySide6.QtGui import QPixmap
 import PySide6.QtSvg
 from PySide6.QtSvgWidgets import QSvgWidget
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+
 import numpy as np
 from json_utils import *
 import time
@@ -19,6 +18,8 @@ from serial_esp32 import SerialESP32
 from ino_utils import compile_and_upload
 import threading
 from PySide6.QtWidgets import QFileDialog
+import pyqtgraph as pg
+from pyqtgraph import PlotWidget
 
 class RefreshableComboBox(QComboBox):
     def __init__(self, refresh_callback, *args, **kwargs):
@@ -327,6 +328,7 @@ class LightCycleConfigurator(QMainWindow):
 
             # Pattern duration
             pattern_duration = QSpinBox()
+            pattern_duration.setRange(0, 9999)
             pattern_duration.setValue(pattern_duration_value)
             pattern_duration_unit = QComboBox()
             pattern_duration_unit.addItems(["seconds", "minutes", "hours"])
@@ -337,6 +339,7 @@ class LightCycleConfigurator(QMainWindow):
 
             # On duration
             on_duration = QSpinBox()
+            on_duration.setRange(0, 9999)
             on_duration.setValue(on_duration_value)
             on_duration_unit = QComboBox()
             on_duration_unit.addItems(["seconds", "minutes", "hours"])
@@ -347,6 +350,7 @@ class LightCycleConfigurator(QMainWindow):
 
             # Off duration
             off_duration = QSpinBox()
+            off_duration.setRange(0, 9999)
             off_duration.setValue(off_duration_value)
             off_duration_unit = QComboBox()
             off_duration_unit.addItems(["seconds", "minutes", "hours"])
@@ -371,11 +375,12 @@ class LightCycleConfigurator(QMainWindow):
         self.main_layout.addLayout(button_layout)
 
     def setup_plot(self):
-        # Matplotlib Canvas for plotting
-        self.figure = Figure(figsize=(5, 4))  # Set the figure size
-        self.canvas = FigureCanvas(self.figure)
-        self.canvas.setFixedSize(500, 400)  # Set the canvas size
-        self.main_layout.addWidget(self.canvas)
+        # PyQtGraph PlotWidget for plotting
+        self.plot_widget = PlotWidget()
+        self.plot_widget.setBackground('w')
+        self.plot_widget.hideAxis('left')
+        self.plot_widget.hideAxis('bottom')
+        self.main_layout.addWidget(self.plot_widget)
 
     def generate_json(self):
         # Generate JSON configuration
@@ -413,47 +418,51 @@ class LightCycleConfigurator(QMainWindow):
 
     def generate_plot(self):
         # Generate plot of light cycle states
-        self.figure.clear()
-        ax = self.figure.add_subplot(111)
-        ax.set_title("Light Cycle Plot")
-        ax.set_xlabel("Time (seconds)")
-        ax.set_ylabel("State (On/Off)")
         
+        self.plot_widget.clear()
+        
+        self.plot_widget.setTitle("Light Cycle Plot")
+        self.plot_widget.setLabel('left', 'State (On/Off)')
+        self.plot_widget.setLabel('bottom', 'Time (seconds)')
+
         timeline = []
         time = self.get_seconds(self.delay_before_start.value(), self.delay_unit.currentText())
+
         for _ in range(self.n_cycles.value()):
-            for pattern_dur, pattern_init, on_dur, on_unit, off_dur, off_unit, *_ in self.patterns:
-                pattern_duration = self.get_seconds(pattern_dur.value(), pattern_init.currentText())
+            for pattern_dur, pattern_unit, on_dur, on_unit, off_dur, off_unit in self.patterns:
+                pattern_duration = self.get_seconds(pattern_dur.value(), pattern_unit.currentText())
                 on_duration = self.get_seconds(on_dur.value(), on_unit.currentText())
                 off_duration = self.get_seconds(off_dur.value(), off_unit.currentText())
 
-                while pattern_duration > 0:
-                    if pattern_duration >= on_duration:
-                        if on_duration >= 0:
-                        
-                            time += on_duration
-                            pattern_duration -= on_duration
-
-                            timeline.append((time, 0))
+                pattern_start_time = time
+                while time - pattern_start_time < pattern_duration:
+                    if time - pattern_start_time + on_duration <= pattern_duration:
+                        time += on_duration
+                        timeline.append((time - on_duration, 1))  # Start of 'on' state
+                        timeline.append((time, 1))                # End of 'on' state
                     else:
-                        
-                        time += pattern_duration
-                        pattern_duration = 0
-                        timeline.append((time, 0))
+                        remaining_on_time = pattern_duration - (time - pattern_start_time)
+                        time += remaining_on_time
+                        timeline.append((time - remaining_on_time, 1))  # Start of 'on' state
+                        timeline.append((time, 1))                      # End of 'on' state
 
-                    if pattern_duration >= off_duration:
-                        if off_duration >= 0:
-                            
-                            time += off_duration
-                            pattern_duration -= off_duration
-                            timeline.append((time, 1))
+                    if time - pattern_start_time + off_duration <= pattern_duration:
+                        time += off_duration
+                        timeline.append((time - off_duration, 0))  # Start of 'off' state
+                        timeline.append((time, 0))                 # End of 'off' state
                     else:
-                        
-                        time += pattern_duration
-                        pattern_duration = 0
-                        timeline.append((time, 1))
+                        remaining_off_time = pattern_duration - (time - pattern_start_time)
+                        time += remaining_off_time
+                        timeline.append((time - remaining_off_time, 0))  # Start of 'off' state
+                        timeline.append((time, 0))                       # End of 'off' state
 
-        # Plot the state transitions
-        times, states = zip(*timeline)
-        ax.step(times, states, where='post')
-        self.canvas.draw()
+        # Ensure the times list has one more element than the states list
+        if timeline:
+            times, states = zip(*timeline)
+            times = list(times)
+            states = list(states)
+            times.append(times[-1] + 1)  # Add an additional time point
+
+            # Plot the state transitions
+            self.plot_widget.plot(times, states, stepMode=True, fillLevel=0, brush=(24, 168, 246))
+            self.plot_widget.hideAxis('left')
