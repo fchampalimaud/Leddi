@@ -2,7 +2,7 @@ import sys
 import json
 import serial.tools.list_ports
 from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QFrame, 
     QLabel, QLineEdit, QComboBox, QPushButton, QSpinBox, QTimeEdit, QGroupBox, QFormLayout, QScrollArea, QSizePolicy, QSpacerItem
 )
 from PySide6.QtCore import Qt, QTime
@@ -13,6 +13,7 @@ from PySide6.QtSvgWidgets import QSvgWidget
 import numpy as np
 from json_utils import *
 import time
+import random
 
 from serial_esp32 import SerialESP32
 from ino_utils import compile_and_upload
@@ -29,6 +30,19 @@ class RefreshableComboBox(QComboBox):
     def showPopup(self):
         self.refresh_callback()
         super().showPopup()
+
+class Bar(QFrame):
+    def __init__(self):
+        super().__init__()
+        self.setFixedSize(10, 20)
+        self.setStyleSheet("background-color: lightgray; border: 0.5px solid gray;")
+
+    def fill(self, filled: bool, is_critical: bool = False):
+        if filled:
+            color = "red" if is_critical else "green"
+        else:
+            color = "lightgray"
+        self.setStyleSheet(f"background-color: {color}; border: 0.5px solid gray;")
 
 class LightCycleConfigurator(QMainWindow):
     def __init__(self, esp32):
@@ -159,20 +173,21 @@ class LightCycleConfigurator(QMainWindow):
     def get_available_com_ports(self):
             ports = serial.tools.list_ports.comports()
             return [port.device for port in ports]
+    
+    def _update_progress_bars(self, value: int):
+        # Special case: if only one bar is filled, make it red
+        is_critical = (value == 1)
+        
+        for i, bar in enumerate(self.bars):
+            if i < value:
+                bar.fill(True, is_critical=(is_critical and i == 0))
+            else:
+                bar.fill(False)
 
     def window_loading(self):
         
         # Create a dropdown menu for COM port selection
         self.com_port_dropdown = RefreshableComboBox(self.refresh_com_ports)
-
-        # self.com_port_dropdown = QComboBox()
-        # self.com_port_dropdown.popupAboutToBeShown.connect(self.refresh_com_ports)
-
-
-        
-
-        
-
         
         port_label = QLabel("Port:")
         self.com_port_dropdown.currentIndexChanged.connect(self.update_com_port)
@@ -187,21 +202,34 @@ class LightCycleConfigurator(QMainWindow):
         self.connect_button.clicked.connect(self.upload_sketch)
         com_port_layout.addWidget(self.connect_button)
 
-        # # add the refresh button
-        # self.refresh_button = QPushButton("🔄")
-        # self.refresh_button.setFixedWidth(20)
-        # self.refresh_button.setStyleSheet("padding: 0px; margin: 0px;")
-        # self.refresh_button.clicked.connect(self.refresh_com_ports)
-        # com_port_layout.addWidget(self.refresh_button)
+        value = self.battery_value = 0
+        self.bars = [Bar() for _ in range(5)]
+        self._update_progress_bars(value)
+        
+        # Create the status bar layout with loading label and battery bars side by side
+        status_layout = QHBoxLayout()
+        status_layout.setSpacing(2)  # Use a small positive value for spacing
 
-        self.main_layout.addLayout(com_port_layout)
+        # Add a label before the bars
+        battery_label = QLabel("Device battery:")
+        status_layout.addWidget(battery_label)
 
+        # Add battery bars right after the label without any stretch or large spacing
+        for bar in self.bars:
+            status_layout.addWidget(bar)
+        
+        status_layout.addStretch()  # Add stretchable space to push the label to the right
+        
         # Create a label to show loading status
         self.loading_label = QLabel("Not connected")
         self.loading_label.setStyleSheet("color: red;")
-        self.loading_label.setAlignment(Qt.AlignRight)
-        self.main_layout.addWidget(self.loading_label)
+        status_layout.addWidget(self.loading_label)
+
+        # Set alignment for the entire layout
+        status_layout.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
         
+        self.main_layout.addLayout(com_port_layout)
+        self.main_layout.addLayout(status_layout)
     
     def upload_sketch(self):
         # Upload the sketch to the ESP32
@@ -210,6 +238,11 @@ class LightCycleConfigurator(QMainWindow):
             if compile_and_upload(self.board_fqbn, self.serial_port, self.source_file):
                 # self.killTimer(self.loading_timer)
                 self.esp32.set_port(self.serial_port)
+                self.battery_value = self.esp32.read_battery_value()
+                if self.battery_value is not None:
+                    self._update_progress_bars(self.battery_value)
+                else:
+                    self._update_progress_bars(0)
                 self.esp32.sync_time_with_esp32()
                 self.loading_label.setStyleSheet("color: green;")
                 self.loading_label.setText("Connected")

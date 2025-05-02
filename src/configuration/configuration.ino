@@ -3,6 +3,9 @@
 #include <Arduino.h>
 #include <esp_psram.h>
 
+const int BATTERY_PIN = 2;
+int value = 0;
+
 bool isSynced = false; 
 Preferences preferences;
 
@@ -17,7 +20,22 @@ void setTimeFromTimestamp(time_t timestamp) {
 void setup() {
   Serial.begin(115200);
   while (!Serial);  // Wait for serial connection
-  Serial.println("Waiting for JSON data...");
+  
+  // Read battery pin 100 times and calculate average
+  // int totalBatteryValue = 0;
+  // for (int i = 0; i < 1; i++) {
+  //   totalBatteryValue += analogRead(BATTERY_PIN);
+  //   delay(1); // Small delay between readings for stability
+  // }
+  // int averageBatteryValue = totalBatteryValue / 100;
+  
+  // Read battery pin 10 times and send each value
+
+  // Serial.print("Average battery value: ");
+  // value = analogRead(BATTERY_PIN);
+  // Serial.println(value);
+  
+  // Serial.println("Waiting for JSON data...");
 
   // Initialize preferences with a namespace
   preferences.begin("config", false);
@@ -25,6 +43,14 @@ void setup() {
 
 void loop() {
   if (Serial.available()) {
+
+    // for (int i = 0; i < 10; i++) {
+      value = analogRead(BATTERY_PIN);
+      Serial.readStringUntil('\n'); // Clear the buffer
+      Serial.print("Battery value: ");
+      Serial.println(value);
+    //   delay(1); // Shorter delay between readings
+    // }
 
     // Read the JSON string from serial
     String jsonString = Serial.readStringUntil('\n');
