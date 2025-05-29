@@ -81,6 +81,7 @@ void loop() {
 
         // Enable Timer Wakeup
         esp_sleep_enable_timer_wakeup(sleepDuration * uS_TO_S_FACTOR);
+        Serial.println("Current time: " + String(ctime(&tv_now.tv_sec)));
 
         Serial.println("Entering Light Sleep Mode...");
         esp_light_sleep_start();  // Enter Light Sleep

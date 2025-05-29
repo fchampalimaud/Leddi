@@ -14,6 +14,11 @@ void setTimeFromTimestamp(time_t timestamp) {
   tv.tv_sec = timestamp;  // Seconds since epoch
   tv.tv_usec = 0;         // Microseconds (not used)
   settimeofday(&tv, NULL);
+
+  // Set timezone to UTC+1 (3600 seconds offset)
+  setenv("TZ", "CET-1", 1);
+  tzset();
+
   Serial.println("Clock synchronized with PC time.");
 }
 
@@ -45,10 +50,14 @@ void loop() {
   if (Serial.available()) {
 
     // for (int i = 0; i < 10; i++) {
-      value = analogRead(BATTERY_PIN);
-      Serial.readStringUntil('\n'); // Clear the buffer
-      Serial.print("Battery value: ");
-      Serial.println(value);
+      static bool batteryRead = false;
+      if (!batteryRead) {
+        value = analogRead(BATTERY_PIN);
+        Serial.readStringUntil('\n'); // Clear the buffer
+        Serial.print("Battery value: ");
+        Serial.println(value);
+        batteryRead = true;
+      }
     //   delay(1); // Shorter delay between readings
     // }
 
