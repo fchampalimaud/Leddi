@@ -8,4 +8,5 @@ dependencies = [
     "pyqtgraph>=0.13.7",
     "pyserial>=3.5",
     "pyside6>=6.8.2.1",
+    "pytz>=2025.2",
 ]

@@ -15,9 +15,9 @@ void setTimeFromTimestamp(time_t timestamp) {
   tv.tv_usec = 0;         // Microseconds (not used)
   settimeofday(&tv, NULL);
 
-  // Set timezone to UTC (no offset)
-  setenv("TZ", "UTC0", 1);
-  tzset();
+  // // Set timezone to UTC (no offset)
+  // setenv("TZ", "UTC0", 1);
+  // tzset();
 
   Serial.println("Clock synchronized with PC time.");
 }
@@ -72,8 +72,8 @@ void loop() {
       // If the timestamp is valid, set the ESP32's time and mark as synced
       if (timestamp > 0) {
         setTimeFromTimestamp(timestamp);
-        Serial.println("Time set to: " + String(ctime(&timestamp)));
-        isSynced = true; // Mark sync as complete
+        Serial.println("Time set to: " + String(ctime(&timestamp)) + String(" (timestamp: ") + String(timestamp) + String(")"));
+        isSynced = true; // Mark sync as complete        Serial.println("Some message" + String(" (timestamp: ") + String(timestamp) + String(")"));
       } else {
         Serial.println(timestamp + "Invalid timestamp received.");
       }

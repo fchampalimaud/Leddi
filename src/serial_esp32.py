@@ -1,11 +1,13 @@
 import serial
 import time
 import datetime
+import pytz
 from ino_utils import compile_and_upload
 
 def get_current_timestamp():
-    # Always get the current UTC timestamp
-    return int(datetime.datetime.utcnow().timestamp())
+    # Get the current time in GMT (UTC) as a timestamp
+    
+    return int(datetime.datetime.now(datetime.timezone.utc).timestamp())
 
 class SerialESP32:
     def __init__(self):
@@ -78,12 +80,14 @@ class SerialESP32:
             self.ser.write(f"{timestamp}\n".encode())
 
             # Wait for ESP32 to confirm sync
-             
-            response = self.ser.readline().decode().strip()
-            if response:
-                print(f"ESP32 Response: {response}")
-            else:
-                print("No response from ESP32")
+            # Read multiple lines from ESP32 (up to 5 lines or until timeout)
+            for _ in range(5):
+                response = self.ser.readline().decode().strip()
+                if response:
+                    print(f"ESP32 Response: {response}")
+                else:
+                    print("No response from ESP32")
+                    break
         else:
             print("Serial port is not open")
 
