@@ -14,7 +14,7 @@ import numpy as np
 from json_utils import *
 import time
 import random
-
+import datetime
 from serial_esp32 import SerialESP32
 from ino_utils import compile_and_upload
 import threading
@@ -416,12 +416,34 @@ class LightCycleConfigurator(QMainWindow):
         self.main_layout.addWidget(self.plot_widget)
 
     def generate_json(self):
+        # Get the current local date
+        current_date = datetime.datetime.now().date()
+        
+        # Get the time from the QTimeEdit widget
+        local_time = self.start_time.time()
+        
+        # Convert QTime to Python datetime with today's date
+        local_datetime = datetime.datetime(
+            current_date.year, 
+            current_date.month, 
+            current_date.day,
+            local_time.hour(),
+            local_time.minute(),
+            local_time.second()
+        )
+        
+        # Convert to UTC
+        utc_datetime = local_datetime.astimezone(datetime.timezone.utc)
+        
+        # Format as string in HH:MM:SS format
+        utc_time_str = utc_datetime.strftime("%H:%M:%S")
+        
         # Generate JSON configuration
         config = {
             "light_cycle": {
                 "n_cycles": self.n_cycles.value(),
                 "delay_before_start": self.get_seconds(self.delay_before_start.value(), self.delay_unit.currentText()),
-                "start_time": self.start_time.text(),
+                "start_time": utc_time_str,  # Use the UTC time string
                 "n_patterns": self.n_patterns.value(),
                 "patterns": []
             }

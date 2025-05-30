@@ -15,8 +15,8 @@ void setTimeFromTimestamp(time_t timestamp) {
   tv.tv_usec = 0;         // Microseconds (not used)
   settimeofday(&tv, NULL);
 
-  // Set timezone to UTC+1 (3600 seconds offset)
-  setenv("TZ", "CET-1", 1);
+  // Set timezone to UTC (no offset)
+  setenv("TZ", "UTC0", 1);
   tzset();
 
   Serial.println("Clock synchronized with PC time.");

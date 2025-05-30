@@ -4,7 +4,8 @@ import datetime
 from ino_utils import compile_and_upload
 
 def get_current_timestamp():
-    return int(time.time())
+    # Always get the current UTC timestamp
+    return int(datetime.datetime.utcnow().timestamp())
 
 class SerialESP32:
     def __init__(self):
