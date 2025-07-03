@@ -56,7 +56,10 @@ class SerialESP32:
                 print(f"Raw battery value: {raw_value}")
                 
                 # Map the value from 0-4095 to 1-5
-                mapped_value = round((raw_value / 4095) * 4) + 1
+                # mapped_value = round((raw_value / 4095) * 4) + 1
+
+                # Map the value from 3250 - 4095 to 1-5
+                mapped_value = round(((raw_value - 3250) / (4095 - 3250)) * 4) + 1
                 # mapped_value = round((raw_value / 4095) * 5)
                 print(f"Mapped value (0-5): {mapped_value}")
                 return mapped_value
