@@ -1,5 +1,7 @@
+#include <Arduino.h>
 #include <Preferences.h>
 #include <time.h>
+#include <sys/time.h>
 #include <esp_psram.h>
 #include <esp_sleep.h>
 #define uS_TO_S_FACTOR 1000000  // Microseconds to seconds conversion
@@ -18,6 +20,7 @@ int PatternDuration[10];
 int offDuration[10];
 int onDuration[10];
 String startTime;
+String startDate;
 
 
 void setup() {
@@ -32,8 +35,9 @@ void setup() {
     delayBeforeStart = preferences.getInt("delay_b_start", 0);
     nPatterns = preferences.getInt("n_patterns", 0);
     startTime = preferences.getString("start_time", "00:00:00");
-    Serial.printf("Loaded %d cycles, %d delay before start, %d patterns, and start time %s\n", 
-                  cycles, delayBeforeStart, nPatterns, startTime.c_str());
+    startDate = preferences.getString("start_date", "1970-01-01");
+    Serial.printf("Loaded %d cycles, %d delay before start, %d patterns, start time %s, start date %s\n", 
+                  cycles, delayBeforeStart, nPatterns, startTime.c_str(), startDate.c_str());
 
     // Loop through each pattern and load its parameters
     for (int i = 0; i < nPatterns; i++) {
@@ -54,13 +58,8 @@ void setup() {
 void loop() {
 
 
-    struct timeval tv_now;
-    gettimeofday(&tv_now, NULL);
-    Serial.println("Current time: " + String(ctime(&tv_now.tv_sec)));
-
     // Get the current time
     struct tm timeinfo;
-    Serial.println("Current time: " + String(ctime(&tv_now.tv_sec)));
     if (!getLocalTime(&timeinfo)) {
         Serial.println("Failed to obtain time");
         return;
@@ -70,24 +69,51 @@ void loop() {
     int startHour, startMinute, startSecond;
     sscanf(startTime.c_str(), "%d:%d:%d", &startHour, &startMinute, &startSecond);
 
+    // Parse the start date
+    int startYear, startMonth, startDay;
+    sscanf(startDate.c_str(), "%d-%d-%d", &startYear, &startMonth, &startDay);
 
-    // Calculate seconds until the target time
+    // Check if we need to wait for the start date
+    bool isStartDateReached = (timeinfo.tm_year + 1900) > startYear ||
+        ((timeinfo.tm_year + 1900) == startYear && 
+         ((timeinfo.tm_mon + 1) > startMonth || 
+          ((timeinfo.tm_mon + 1) == startMonth && timeinfo.tm_mday >= startDay)));
+
+    if (!isStartDateReached) {
+        // Sleep until tomorrow and check again
+        int sleepDuration = 24 * 3600; // Sleep for 24 hours
+        Serial.printf("Current date %04d-%02d-%02d is before start date %04d-%02d-%02d. Sleeping for 24 hours...\n",
+                     timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
+                     startYear, startMonth, startDay);
+        esp_sleep_enable_timer_wakeup(sleepDuration * uS_TO_S_FACTOR);
+        esp_light_sleep_start();
+        return;
+    }
+
+    // If we reached the correct date, check the time
     int currentTimeInSeconds = (timeinfo.tm_hour * 3600) + (timeinfo.tm_min * 60) + timeinfo.tm_sec;
     int targetTimeInSeconds = (startHour * 3600) + (startMinute * 60) + startSecond;
 
-    if (currentTimeInSeconds < targetTimeInSeconds) {
-        int sleepDuration = (targetTimeInSeconds - currentTimeInSeconds);
-        Serial.printf("Sleeping for %d seconds...\n", sleepDuration);
+    // Only proceed with time-based sleep if we're on the exact start date
+    if (timeinfo.tm_year + 1900 == startYear && 
+        timeinfo.tm_mon + 1 == startMonth && 
+        timeinfo.tm_mday == startDay) {
+        
+        if (currentTimeInSeconds < targetTimeInSeconds) {
+            int sleepDuration = (targetTimeInSeconds - currentTimeInSeconds);
+            Serial.printf("Waiting for start time. Sleeping for %d seconds...\n", sleepDuration);
+            esp_sleep_enable_timer_wakeup(sleepDuration * uS_TO_S_FACTOR);
+            esp_light_sleep_start();
+            return;
+        }
+    }
 
-        // Enable Timer Wakeup
-        esp_sleep_enable_timer_wakeup(sleepDuration * uS_TO_S_FACTOR);
-        Serial.println("Current time: " + String(ctime(&tv_now.tv_sec)));
-
-        Serial.println("Entering Light Sleep Mode...");
-        esp_light_sleep_start();  // Enter Light Sleep
-
-        Serial.println("Woke up!");
-    } else {
+    // If we've reached here, we're at or past both the start date and time
+    if ((timeinfo.tm_year + 1900 == startYear && 
+         timeinfo.tm_mon + 1 == startMonth && 
+         timeinfo.tm_mday == startDay && 
+         currentTimeInSeconds >= targetTimeInSeconds) ||
+        isStartDateReached) {
 
 
 
