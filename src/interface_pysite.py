@@ -3,7 +3,7 @@ import json
 import serial.tools.list_ports
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QFrame, 
-    QLabel, QLineEdit, QComboBox, QPushButton, QSpinBox, QTimeEdit, QGroupBox, QFormLayout, QScrollArea, QSizePolicy, QSpacerItem
+    QLabel, QLineEdit, QComboBox, QPushButton, QSpinBox, QTimeEdit, QDateEdit, QGroupBox, QFormLayout, QScrollArea, QSizePolicy, QSpacerItem
 )
 from PySide6.QtCore import Qt, QTime
 from PySide6.QtGui import QPixmap
@@ -284,6 +284,7 @@ class LightCycleConfigurator(QMainWindow):
                 n_cycles = config.get("light_cycle", {}).get("n_cycles", 1)
                 delay_before_start = config.get("light_cycle", {}).get("delay_before_start", 0)
                 start_time_str = config.get("light_cycle", {}).get("start_time", "00:00:00")
+                start_date_str = config.get("light_cycle", {}).get("start_date", datetime.datetime.now().strftime("%Y-%m-%d"))
                 n_patterns = config.get("light_cycle", {}).get("n_patterns", 1)
                 for pattern in config.get("light_cycle", {}).get("patterns", []):
                     pass    
@@ -291,6 +292,7 @@ class LightCycleConfigurator(QMainWindow):
             n_cycles = 1
             delay_before_start = 0
             start_time_str = "00:00:00"
+            start_date_str = datetime.datetime.now().strftime("%Y-%m-%d")
             n_patterns = 1
 
         # Number of cycles
@@ -309,6 +311,17 @@ class LightCycleConfigurator(QMainWindow):
         delay_layout.addWidget(self.delay_before_start)
         delay_layout.addWidget(self.delay_unit)
         form_layout.addRow("Delay Before Start", delay_layout)
+
+        # Start date
+        self.start_date = QDateEdit()
+        if start_date_str:
+            start_date = datetime.datetime.strptime(start_date_str, "%Y-%m-%d").date()
+            self.start_date.setDate(start_date)
+        else:
+            self.start_date.setDate(datetime.datetime.now().date())
+        self.start_date.setCalendarPopup(True)
+        self.start_date.setDisplayFormat("yyyy-MM-dd")
+        form_layout.addRow("Start Date", self.start_date)
 
         # Start time
         self.start_time = QTimeEdit()
@@ -416,17 +429,15 @@ class LightCycleConfigurator(QMainWindow):
         self.main_layout.addWidget(self.plot_widget)
 
     def generate_json(self):
-        # Get the current local date
-        current_date = datetime.datetime.now().date()
-        
-        # Get the time from the QTimeEdit widget
+        # Get the selected date and time from the UI
+        selected_date = self.start_date.date().toPython()
         local_time = self.start_time.time()
         
-        # Convert QTime to Python datetime with today's date
+        # Create datetime using selected date and time
         local_datetime = datetime.datetime(
-            current_date.year, 
-            current_date.month, 
-            current_date.day,
+            selected_date.year,
+            selected_date.month,
+            selected_date.day,
             local_time.hour(),
             local_time.minute(),
             local_time.second()
@@ -443,6 +454,7 @@ class LightCycleConfigurator(QMainWindow):
             "light_cycle": {
                 "n_cycles": self.n_cycles.value(),
                 "delay_before_start": self.get_seconds(self.delay_before_start.value(), self.delay_unit.currentText()),
+                "start_date": utc_datetime.strftime("%Y-%m-%d"),  # Add the UTC date
                 "start_time": utc_time_str,  # Use the UTC time string
                 "n_patterns": self.n_patterns.value(),
                 "patterns": []

@@ -119,6 +119,10 @@ void loop() {
         const char* startTime = lightCycle["start_time"];
         preferences.putString("start_time", startTime);
 
+        // Store start_date as a string (e.g., "2025-09-21")
+        const char* startDate = lightCycle["start_date"];
+        preferences.putString("start_date", startDate);
+
         // preferences.end();
 
 

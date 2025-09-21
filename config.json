@@ -2,7 +2,8 @@
     "light_cycle": {
         "n_cycles": 41,
         "delay_before_start": 0,
-        "start_time": "15:30:00",
+        "start_date": "2025-09-20",
+        "start_time": "11:40:00",
         "n_patterns": 1,
         "patterns": [
             {
